@@ -21,7 +21,7 @@ BackgroundCosmology::BackgroundCosmology(
   //define derived variables
   OmegaNu = 0.0;
 
-  double H0 = h * Constants.H0_over_h;
+  H0 = h * Constants.H0_over_h;
   OmegaR = 2.*pow(M_PI, 2)/30.*pow(Constants.k_b * TCMB, 4)/(pow(Constants.hbar, 3) * pow(Constants.c, 5))*8*M_PI*Constants.G/(3*pow(H0, 2));
 
   OmegaLambda = 1. - OmegaK - OmegaB - OmegaCDM - OmegaR - OmegaNu;
@@ -41,15 +41,13 @@ void BackgroundCosmology::solve(){
 
   // The ODE for deta/dx
   ODEFunction detadx = [&](double x, const double *eta, double *detadx){
-
-    detadx[0] = Constants.c*Hp_of_x(x);
-
+    detadx[0] = Constants.c/Hp_of_x(x);
     return GSL_SUCCESS;
   };
 
   //set initial conditions
   //use analytical approximation
-  double etaini = Constants.c/(Hp_of_x(Constants.x_start));
+  double etaini = Constants.c/Hp_of_x(Constants.x_start);
   Vector eta_ic{etaini};
 
   //solve ODE
@@ -75,7 +73,7 @@ double BackgroundCosmology::H_of_x(double x) const{
   //then implement Friedmann eq
   double OmegaM = OmegaB + OmegaCDM;
   double OmegaRad = OmegaR + OmegaNu;
-  double H = H0 * sqrt(OmegaM/pow(a, 3) + OmegaRad/pow(a, 4) + OmegaK/pow(a, 2) + OmegaLambda);
+  double H = H0 * sqrt(OmegaM/pow(a, 3.) + OmegaRad/pow(a, 4.) + OmegaK/pow(a, 2.) + OmegaLambda);
 
   return H;
 }
@@ -183,6 +181,10 @@ double BackgroundCosmology::get_OmegaK(double x) const{
 
 double BackgroundCosmology::eta_of_x(double x) const{
   return eta_of_x_spline(x);
+}
+
+double BackgroundCosmology::get_detadx(double x) const{
+  return eta_of_x_spline.deriv_x(x);
 }
 
 double BackgroundCosmology::get_H0() const{

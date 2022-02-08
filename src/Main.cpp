@@ -39,6 +39,11 @@ int main(int argc, char **argv){
   // Output background evolution quantities
   cosmo.output("cosmology.txt");
 
+  //test
+  double x = -5;
+  std::cout << cosmo.Hp_of_x(x)/(pow(M_E, x)*cosmo.H_of_x(x)) << std::endl;
+  std::cout << cosmo.get_detadx(x)*cosmo.Hp_of_x(x)/Constants.c << std::endl;
+
   // Remove when module is completed
   return 0;
 
