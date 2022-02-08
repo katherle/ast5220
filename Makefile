@@ -3,16 +3,16 @@
 SHELL := /bin/bash
 
 # Set compiler (use =c++17 if you have this availiable)
-CC = g++ -std=c++11 
+CC = g++ -std=c++11
 
 # Paths to GSL library
-INC  = -I/mn/stornext/u3/hansw/winther/local/include
-LIBS = -L/mn/stornext/u3/hansw/winther/local/lib -lgsl -lgslcblas
+INC  = -I$(HOME)/local/include
+LIBS = -L$(HOME)/local/lib -lgsl -lgslcblas
 
 #=======================================================
 # Options
 #=======================================================
-OPTIONS = 
+OPTIONS =
 
 # Add bounds checking
 OPTIONS += -D_GLIBCXX_DEBUG
@@ -58,8 +58,7 @@ cmb: $(OBJS)
 	${CC} -o $@ $^ $C $(INC) $(LIBS)
 
 %.o: %.cpp
-	${CC}  -c -o $@ $< $C $(INC) 
+	${CC}  -c -o $@ $< $C $(INC)
 
 clean:
 	rm -rf $(TARGETS) *.o
-

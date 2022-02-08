@@ -8,7 +8,7 @@ using Vector = std::vector<double>;
 
 class BackgroundCosmology{
   private:
-   
+
     // Cosmological parameters
     double h;                       // Little h = H0/(100km/s/Mpc)
     double OmegaB;                  // Baryon density today
@@ -16,7 +16,7 @@ class BackgroundCosmology{
     double OmegaLambda;             // Dark energy density today
     double Neff;                    // Effective number of relativistic species (3.046 or 0 if ignoring neutrinos)
     double TCMB;                    // Temperature of the CMB today in Kelvin
-   
+
     // Derived parameters
     double OmegaR;                  // Photon density today (follows from TCMB)
     double OmegaNu;                 // Neutrino density today (follows from TCMB and Neff)
@@ -29,17 +29,18 @@ class BackgroundCosmology{
 
     // Splines to be made
     Spline eta_of_x_spline{"eta"};
- 
+
   public:
 
-    // Constructors 
+    // Constructors
     BackgroundCosmology() = delete;
     BackgroundCosmology(
-        double h, 
-        double OmegaB, 
-        double OmegaCDM, 
+        double h,
+        double OmegaB,
+        double OmegaCDM,
         double OmegaK,
-        double Neff, 
+        //double OmegaLambda,
+        double Neff,
         double TCMB
         );
 
@@ -56,17 +57,19 @@ class BackgroundCosmology{
     double eta_of_x(double x) const;
     double H_of_x(double x) const;
     double Hp_of_x(double x) const;
+    double dHdx_of_x(double x) const;
     double dHpdx_of_x(double x) const;
+    double ddHddx_of_x(double x) const;
     double ddHpddx_of_x(double x) const;
-    double get_OmegaB(double x = 0.0) const; 
-    double get_OmegaM(double x = 0.0) const; 
+    double get_OmegaB(double x = 0.0) const;
+    double get_OmegaM(double x = 0.0) const;
     double get_OmegaR(double x = 0.0) const;
-    double get_OmegaRtot(double x = 0.0) const; 
+    double get_OmegaRtot(double x = 0.0) const;
     double get_OmegaNu(double x = 0.0) const;
-    double get_OmegaCDM(double x = 0.0) const; 
-    double get_OmegaLambda(double x = 0.0) const; 
-    double get_OmegaK(double x = 0.0) const; 
-    double get_OmegaMnu(double x = 0.0) const; 
+    double get_OmegaCDM(double x = 0.0) const;
+    double get_OmegaLambda(double x = 0.0) const;
+    double get_OmegaK(double x = 0.0) const;
+    double get_OmegaMnu(double x = 0.0) const;
     double get_H0() const;
     double get_h() const;
     double get_Neff() const;
