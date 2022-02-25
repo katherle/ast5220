@@ -41,18 +41,16 @@ int main(int argc, char **argv){
 
   //test
   double x = Constants.x_end;
-  std::cout << "Testing:" << std::endl;
-  std::cout << "Should equal 1: " << cosmo.Hp_of_x(x)/(pow(M_E, x)*cosmo.H_of_x(x)) << std::endl;
-  std::cout << "Should equal 1: " << cosmo.get_detadx(0.0)*cosmo.Hp_of_x(0.0)/Constants.c << std::endl;
-  std::cout << "Should equal 1: " << cosmo.dHpdx_of_x(x)/cosmo.Hp_of_x(x) << std::endl;
-  std::cout << "Should equal -1/2: " << cosmo.dHpdx_of_x(-3.)/cosmo.Hp_of_x(-3.) << std::endl;
-  std::cout << "Should equal -1: " << cosmo.dHpdx_of_x(Constants.x_start)/cosmo.Hp_of_x(Constants.x_start) << std::endl;
-  std::cout << "Should equal 1: " << cosmo.ddHpddx_of_x(x)/cosmo.Hp_of_x(x) << std::endl;
-  std::cout << "Should equal 1/4: " << cosmo.ddHpddx_of_x(-3.)/cosmo.Hp_of_x(-3.) << std::endl;
-  std::cout << "Should equal 1: " << cosmo.ddHpddx_of_x(Constants.x_start)/cosmo.Hp_of_x(Constants.x_start) << std::endl;
-
-  // Remove when module is completed
-  return 0;
+  std::cout << "Testing:" << "\n";
+  std::cout << "Should equal 1: " << cosmo.Hp_of_x(x)/(pow(M_E, x)*cosmo.H_of_x(x)) << "\n";
+  std::cout << "Should equal 1: " << cosmo.get_detadx(0.0)*cosmo.Hp_of_x(0.0)/Constants.c << "\n";
+  std::cout << "Should equal -1: " << cosmo.dHpdx_of_x(Constants.x_start)/cosmo.Hp_of_x(Constants.x_start) << "\n";
+  std::cout << "Should equal -1/2: " << cosmo.dHpdx_of_x(-3.)/cosmo.Hp_of_x(-3.) << "\n";
+  std::cout << "Should equal 1: " << cosmo.dHpdx_of_x(x)/cosmo.Hp_of_x(x) << "\n";
+  std::cout << "Should equal 1: " << cosmo.ddHpddx_of_x(Constants.x_start)/cosmo.Hp_of_x(Constants.x_start) << "\n";
+  std::cout << "Should equal 1/4: " << cosmo.ddHpddx_of_x(-3.)/cosmo.Hp_of_x(-3.) << "\n";
+  std::cout << "Should equal 1: " << cosmo.ddHpddx_of_x(x)/cosmo.Hp_of_x(x) << "\n";
+  std::cout << std::endl;
 
   //=========================================================================
   // Module II
