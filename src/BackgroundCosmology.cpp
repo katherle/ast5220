@@ -264,15 +264,16 @@ double BackgroundCosmology::get_TCMB(double x) const{
 void BackgroundCosmology::info() const{
   std::cout << "\n";
   std::cout << "Info about cosmology class:\n";
-  std::cout << "OmegaB:      " << OmegaB      << "\n";
-  std::cout << "OmegaCDM:    " << OmegaCDM    << "\n";
-  std::cout << "OmegaLambda: " << OmegaLambda << "\n";
-  std::cout << "OmegaK:      " << OmegaK      << "\n";
-  std::cout << "OmegaNu:     " << OmegaNu     << "\n";
-  std::cout << "OmegaR:      " << OmegaR      << "\n";
-  std::cout << "Neff:        " << Neff        << "\n";
-  std::cout << "h:           " << h           << "\n";
-  std::cout << "TCMB:        " << TCMB        << "\n";
+  std::cout << "OmegaB:          " << OmegaB      << "\n";
+  std::cout << "OmegaCDM:        " << OmegaCDM    << "\n";
+  std::cout << "OmegaLambda:     " << OmegaLambda << "\n";
+  std::cout << "OmegaK:          " << OmegaK      << "\n";
+  std::cout << "OmegaNu:         " << OmegaNu     << "\n";
+  std::cout << "OmegaR:          " << OmegaR      << "\n";
+  std::cout << "Neff:            " << Neff        << "\n";
+  std::cout << "h:               " << h           << "\n";
+  std::cout << "TCMB:            " << TCMB        << " K \n";
+  std::cout << "Age of universe: " << t_of_x(0.0)/(3.15e16) << " Gyr \n";
   std::cout << std::endl;
 }
 
@@ -280,8 +281,8 @@ void BackgroundCosmology::info() const{
 // Output some data to file
 //====================================================
 void BackgroundCosmology::output(const std::string filename) const{
-  const double x_min = -10.0;
-  const double x_max =  0.0;
+  const double x_min = Constants.x_start;
+  const double x_max = Constants.x_end;
   const int    n_pts =  100;
 
   Vector x_array = Utils::linspace(x_min, x_max, n_pts);

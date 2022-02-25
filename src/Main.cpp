@@ -40,17 +40,16 @@ int main(int argc, char **argv){
   cosmo.output("cosmology.txt");
 
   //test
-  std::cout << h*Constants.H0_over_h << std::endl;
-  std::cout << cosmo.H_of_x(Constants.x_end) << std::endl;
-  // double x = Constants.x_end;
-  // std::cout << "Should equal 1: " << cosmo.Hp_of_x(x)/(pow(M_E, x)*cosmo.H_of_x(x)) << std::endl;
-  // std::cout << "Should equal 1: " << cosmo.get_detadx(x)*cosmo.Hp_of_x(x)/Constants.c << std::endl;
-  // std::cout << "Should equal 0.5249: " << cosmo.dHpdx_of_x(x)/cosmo.Hp_of_x(x) << std::endl;
-  // std::cout << "Should equal -1/2: " << cosmo.dHpdx_of_x(-5.)/cosmo.Hp_of_x(-5.) << std::endl;
-  // std::cout << "Should equal -1: " << cosmo.dHpdx_of_x(Constants.x_start)/cosmo.Hp_of_x(Constants.x_start) << std::endl;
-  // std::cout << "Should equal 1.249: " << cosmo.ddHpddx_of_x(x)/cosmo.Hp_of_x(x) << std::endl;
-  // std::cout << "Should equal 1/4: " << cosmo.ddHpddx_of_x(-5.)/cosmo.Hp_of_x(-5.) << std::endl;
-  // std::cout << "Should equal 1: " << cosmo.ddHpddx_of_x(Constants.x_start)/cosmo.Hp_of_x(Constants.x_start) << std::endl;
+  double x = Constants.x_end;
+  std::cout << "Testing:" << std::endl;
+  std::cout << "Should equal 1: " << cosmo.Hp_of_x(x)/(pow(M_E, x)*cosmo.H_of_x(x)) << std::endl;
+  std::cout << "Should equal 1: " << cosmo.get_detadx(0.0)*cosmo.Hp_of_x(0.0)/Constants.c << std::endl;
+  std::cout << "Should equal 1: " << cosmo.dHpdx_of_x(x)/cosmo.Hp_of_x(x) << std::endl;
+  std::cout << "Should equal -1/2: " << cosmo.dHpdx_of_x(-3.)/cosmo.Hp_of_x(-3.) << std::endl;
+  std::cout << "Should equal -1: " << cosmo.dHpdx_of_x(Constants.x_start)/cosmo.Hp_of_x(Constants.x_start) << std::endl;
+  std::cout << "Should equal 1: " << cosmo.ddHpddx_of_x(x)/cosmo.Hp_of_x(x) << std::endl;
+  std::cout << "Should equal 1/4: " << cosmo.ddHpddx_of_x(-3.)/cosmo.Hp_of_x(-3.) << std::endl;
+  std::cout << "Should equal 1: " << cosmo.ddHpddx_of_x(Constants.x_start)/cosmo.Hp_of_x(Constants.x_start) << std::endl;
 
   // Remove when module is completed
   return 0;
