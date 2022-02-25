@@ -40,6 +40,8 @@ int main(int argc, char **argv){
   cosmo.output("cosmology.txt");
 
   //test
+  std::cout << h*Constants.H0_over_h << std::endl;
+  std::cout << cosmo.H_of_x(Constants.x_end) << std::endl;
   // double x = Constants.x_end;
   // std::cout << "Should equal 1: " << cosmo.Hp_of_x(x)/(pow(M_E, x)*cosmo.H_of_x(x)) << std::endl;
   // std::cout << "Should equal 1: " << cosmo.get_detadx(x)*cosmo.Hp_of_x(x)/Constants.c << std::endl;
