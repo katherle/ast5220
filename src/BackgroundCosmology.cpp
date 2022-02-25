@@ -19,10 +19,10 @@ BackgroundCosmology::BackgroundCosmology(
   TCMB(TCMB)
 {
   //define derived variables
-  OmegaNu = 0.0;
-
   H0 = h * Constants.H0_over_h;
   OmegaR = 2.*pow(M_PI, 2)/30.*pow(Constants.k_b * TCMB, 4)/(pow(Constants.hbar, 3) * pow(Constants.c, 5))*8*M_PI*Constants.G/(3*pow(H0, 2));
+
+  OmegaNu = Neff*7./8.*pow(4./11., 4./3.)*OmegaR;
 
   OmegaLambda = 1. - OmegaK - OmegaB - OmegaCDM - OmegaR - OmegaNu;
 }
@@ -274,6 +274,7 @@ void BackgroundCosmology::info() const{
   std::cout << "h:               " << h           << "\n";
   std::cout << "TCMB:            " << TCMB        << " K \n";
   std::cout << "Age of universe: " << t_of_x(0.0)/(3.15e16) << " Gyr \n";
+  std::cout << "Horizon:         " << eta_of_x(0.0)/(3.15e16*Constants.c) << " Gyr \n";
   std::cout << std::endl;
 }
 
@@ -283,7 +284,7 @@ void BackgroundCosmology::info() const{
 void BackgroundCosmology::output(const std::string filename) const{
   const double x_min = Constants.x_start;
   const double x_max = Constants.x_end;
-  const int    n_pts =  100;
+  const int    n_pts =  500;
 
   Vector x_array = Utils::linspace(x_min, x_max, n_pts);
 
