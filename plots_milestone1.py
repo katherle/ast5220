@@ -6,6 +6,7 @@ from astropy import constants as const
 from astropy.table import QTable  # to use tables with units
 from astropy.visualization import quantity_support # plots with units
 from matplotlib_inline.backend_inline import set_matplotlib_formats
+from scipy.optimize import fsolve
 
 #making plots look nicer:
 quantity_support()
@@ -14,7 +15,7 @@ from matplotlib import cm
 from cycler import cycler
 plt.rc('legend', frameon=False)
 plt.rc('figure', figsize=(7, 7/1.25)) # Larger figure sizes
-plt.rc('font', size=10)
+plt.rc('font', size=14)
 
 # import txt file
 tmp = np.asarray(pd.read_csv('cosmology.txt', sep = " ", header = None))
@@ -43,13 +44,19 @@ Neff = 0
 
 omegaM0 = 0.05+0.267
 omegarad0 = 2*np.pi**2/30*(const.k_B*TCMB)**4/(const.hbar**3 * const.c**5)*8*np.pi*const.G/(3*H0**2)
-omegaR0 = omegarad0*(1 + Neff+7/8+(4/11)**(4/3))
+omegaR0 = omegarad0*(1 + Neff*7/8*(4/11)**(4/3))
 omegak0 = 0
 omegaLambda0 = 1 - omegaM0 - omegak0 - omegaR0
 
+#equalities
 x_rm = np.log(omegaR0/omegaM0)
 x_mde = np.log(omegaM0/omegaLambda0)/3
-x_rde = np.log(omegaR0/omegaLambda0)/4
+
+#start of acceleration: dda/dt2 = 0
+func = lambda x: omegaLambda0*np.exp(x) - 1/2*omegaM0*np.exp(-2*x) - omegaR0*np.exp(-3*x)
+x_acc = fsolve(func, 0)
+
+print(x_rm, x_mde, x_acc)
 
 #plot H and associates
 fig, ax = plt.subplots(2, 2, figsize = (10, 10/1.25))
@@ -66,17 +73,18 @@ ax[0, 1].set_title(r"$\frac{\mathcal{H}(x)}{100}$")
 ax[1, 0].plot(x, background["dHpdx"]/background["Hp"], color = "grey")
 ax[1, 0].set_title(r"$\frac{1}{\mathcal{H}}\frac{d\mathcal{H}}{dx}$")
 
+#ax[1, 1].plot(x, (background["dHpdx"]/background["Hp"])**2, "k--", lw = 1.2, label = r"$(\mathcal{H}'/\mathcal{H})^2$")
 ax[1, 1].plot(x, background["ddHpddx"]/background["Hp"], color = "grey")
 ax[1, 1].set_title(r"$\frac{1}{\mathcal{H}}\frac{d^2\mathcal{H}}{dx^2}$")
 
 for row in ax:
     for axis in row:
         axis.grid()
-        axis.set_xlim([-12, 0])
+        axis.set_xlim([-12, 5])
         axis.set_xlabel("x")
         axis.axvline(x_rm, ls = '--', lw = 1, color = "tab:blue", label = r"x$_{rm}$")
         axis.axvline(x_mde, ls = '--', lw = 1, color = "tab:orange", label = r"x$_{m\Lambda}$")
-        axis.axvline(x_rde, ls = '--', lw = 1, color = "tab:green", label = r"x$_{r\Lambda}$")
+        axis.axvline(x_acc, ls = '--', lw = 1, color = "tab:green", label = r"x$_{\rm acc}$")
         axis.legend()
 plt.tight_layout()
 plt.savefig("H_etc.pdf")
@@ -84,24 +92,23 @@ plt.savefig("H_etc.pdf")
 
 #plot eta and t
 fig, ax = plt.subplots(1, 2, figsize = (10, 5))
-ax[0].plot(x, background["eta"], color = "grey")
-ax[0].set_ylabel(r"$\eta$(x) [Mpc]")
-ax[0].set_ylim([1, 10**5])
+ax[0].plot(x, (background["eta"]/const.c).to("Gyr"), color = "grey")
+ax[0].set_ylabel(r"$\eta$(x)/c [Gyr]")
 ax[0].set_title("Conformal time")
 
 ax[1].plot(x, background["t"], color = "grey")
 ax[1].set_ylabel(r"t(x) [Gyr]")
-ax[1].set_ylim([10**(-8), 10**2])
 ax[1].set_title("Proper time")
 
 for axis in ax:
     axis.grid()
     axis.set_xlim([-12, 0])
-    axis.set_yscale("log")
+    axis.set_ylim([-1, 50])
+    #axis.set_yscale("log")
     axis.set_xlabel("x")
     axis.axvline(x_rm, ls = '--', lw = 1, color = "tab:blue", label = r"x$_{rm}$")
     axis.axvline(x_mde, ls = '--', lw = 1, color = "tab:orange", label = r"x$_{m\Lambda}$")
-    axis.axvline(x_rde, ls = '--', lw = 1, color = "tab:green", label = r"x$_{r\Lambda}$")
+    axis.axvline(x_acc, ls = '--', lw = 1, color = "tab:green", label = r"x$_{\rm acc}$")
     axis.legend()
 plt.tight_layout()
 plt.savefig("times.pdf")
@@ -110,14 +117,14 @@ plt.savefig("times.pdf")
 #plot eta*Hp/c
 plt.figure()
 plt.plot(x, (background["eta"]*background["Hp"]/const.c).si, color = "grey")
-plt.ylabel(r"$\frac{\eta(x)\mathcal{H}(x)}{c}$")
+plt.title(r"$\frac{\eta(x)\mathcal{H}(x)}{c}$")
 plt.xlabel("x")
-plt.xlim([-15, 0])
+plt.xlim([-12, 0])
 plt.ylim([0.75, 3])
 plt.grid()
 plt.axvline(x_rm, ls = '--', lw = 1, color = "tab:blue", label = r"x$_{rm}$")
 plt.axvline(x_mde, ls = '--', lw = 1, color = "tab:orange", label = r"x$_{m\Lambda}$")
-plt.axvline(x_rde, ls = '--', lw = 1, color = "tab:green", label = r"x$_{r\Lambda}$")
+plt.axvline(x_acc, ls = '--', lw = 1, color = "tab:green", label = r"x$_{\rm acc}$")
 plt.legend()
 plt.savefig("etaHp_c.pdf")
 #plt.show()
@@ -131,11 +138,12 @@ plt.plot(x, omegaM, label = r"$\Omega_M$")
 plt.plot(x, background["OmegaLambda"], label = r"$\Omega_\Lambda$")
 plt.axvline(x_rm, ls = '--', lw = 1, color = "tab:blue", label = r"x$_{rm}$")
 plt.axvline(x_mde, ls = '--', lw = 1, color = "tab:orange", label = r"x$_{m\Lambda}$")
-plt.axvline(x_rde, ls = '--', lw = 1, color = "tab:green", label = r"x$_{r\Lambda}$")
+plt.axvline(x_acc, ls = '--', lw = 1, color = "tab:green", label = r"x$_{\rm acc}$")
 plt.legend()
 plt.xlim([-20, 5])
 plt.ylabel(r"$\Omega_i$")
 plt.xlabel("x")
+plt.title("Relative densities")
 plt.grid()
 plt.savefig("omegas.pdf")
 #plt.show()
@@ -153,7 +161,9 @@ plt.yscale("log")
 plt.xscale("log")
 plt.xlim(right = 2)
 plt.ylim(top = 10**2)
+#plt.axvline(1/np.exp(x_rm)-1, ls = '--', lw = 1, color = "tab:blue", label = r"z$_{rm}$")
 plt.axvline(1/np.exp(x_mde)-1, ls = '--', lw = 1, color = "tab:orange", label = r"z$_{m\Lambda}$")
+plt.axvline(1/np.exp(x_acc)-1, ls = '--', lw = 1, color = "tab:green", label = r"z$_{\rm acc}$")
 plt.legend()
 plt.title("Luminosity distance")
 plt.xlabel("z")
