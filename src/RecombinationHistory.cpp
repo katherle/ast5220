@@ -281,17 +281,54 @@ double RecombinationHistory::get_Yp() const{
 // Print some useful info about the class
 //====================================================
 void RecombinationHistory::info() const{
-  //x_decouple = 
+  //find x for which tau(x) = 1
+  //I know there has got to be a c++ minimization algorithm out there already
+  //but I got fed up looking for one that didn't require me to rewrite half the class
+  //so I decided it was simpler to write my own
+  //I was right this took like ten minutes
+  Vector x_dec{-7.2, -6.9};
+  double x_1 = 0.; //temporary storage
+  int i = 0, max_i = 100;
 
+  do {
+    i++;
+    x_1 = x_dec[1];
+    if (tau_of_x(x_dec[1]) > 1.000001){
+      x_dec[1] += abs(x_dec[0] - x_dec[1])/2.;
+      x_dec[0] = x_1;
+    }
+    if (tau_of_x(x_dec[1]) < 1.000001){
+      x_dec[1] -= abs(x_dec[0] - x_dec[1])/2.;
+      x_dec[0] = x_1;
+    }
+  }
+  while(x_dec[1] != x_dec[0] && i < max_i);
+
+  //find x for which Xe(x) = 0.5
+  Vector x_rec{-7.2, -6.9};
+  i = 0;
+  do {
+    i++;
+    x_1 = x_rec[1];
+    if (Xe_of_x(x_rec[1]) > 0.5000001){
+      x_rec[1] += abs(x_rec[0] - x_rec[1])/2.;
+      x_rec[0] = x_1;
+    }
+    if (Xe_of_x(x_rec[1]) < 0.5000001){
+      x_rec[1] -= abs(x_rec[0] - x_rec[1])/2.;
+      x_rec[0] = x_1;
+    }
+  }
+  while(x_rec[1] != x_rec[0] && i < max_i);
 
   std::cout << "\n";
   std::cout << "Info about recombination/reionization history class:\n";
-  std::cout << "Yp:            " << Yp                << "\n";
-  std::cout << "x(decoupling): " << -6.986841         << "\n"; //you still need to automate this instead of trial and error
-  std::cout << "z(decoupling): " << exp(6.986841) - 1 << "\n";
-  std::cout << "x(rec):        " << -7.163781         << "\n"; //also should be automated
-  std::cout << "z(rec):        " << exp(7.163781) - 1 << "\n";
-  std::cout << "Freezeout Xe:  " << Xe_of_x(0.)       << "\n";
+  std::cout << "Yp:            " << Yp                 << "\n";
+  std::cout << "x(decoupling): " << x_dec[1]           << "\n";
+  std::cout << "z(decoupling): " << exp(-x_dec[1]) - 1 << "\n";
+  std::cout << "x(rec):        " << x_rec[1]           << "\n";
+  std::cout << "z(rec):        " << exp(-x_rec[1]) - 1 << "\n";
+  std::cout << "Freezeout Xe:  " << Xe_of_x(0.)        << "\n";
   std::cout << std::endl;
 }
 
