@@ -130,52 +130,52 @@ double BackgroundCosmology::proper_distance(double x) const{
 
 double BackgroundCosmology::angular_distance(double x) const{
   double r = proper_distance(x);
-  return pow(M_E, x)*r;
+  return exp(x)*r;
 }
 
 double BackgroundCosmology::luminosity_distance(double x) const{
   double da = angular_distance(x);
-  return da/pow(M_E, 2.*x);
+  return da/exp(2.*x);
 }
 
 double BackgroundCosmology::H_of_x(double x) const{
   //implement Friedmann eq
   double OmegaM = OmegaB + OmegaCDM;
   double OmegaRad = OmegaR + OmegaNu;
-  double H = H0 * sqrt(OmegaM/pow(M_E, 3.*x) + OmegaRad/pow(M_E, 4.*x) + OmegaK/pow(M_E, 2.*x) + OmegaLambda);
+  double H = H0 * sqrt(OmegaM/exp(3.*x) + OmegaRad/exp(4.*x) + OmegaK/exp(2.*x) + OmegaLambda);
 
   return H;
 }
 
 double BackgroundCosmology::Hp_of_x(double x) const{
   //Hp = aH
-  return pow(M_E, x)*H_of_x(x);
+  return exp(x)*H_of_x(x);
 }
 
 double BackgroundCosmology::dHdx_of_x(double x) const{
   double OmegaM = OmegaB + OmegaCDM;
   double OmegaRad = OmegaR + OmegaNu;
 
-  return H0*H0*(-3.*OmegaM/pow(M_E, 3.*x) - 4.*OmegaRad/pow(M_E, 4.*x) - 2.*OmegaK/pow(M_E, 2.*x))/(2.*H_of_x(x));
+  return H0*H0*(-3.*OmegaM/exp(3.*x) - 4.*OmegaRad/exp(4.*x) - 2.*OmegaK/exp(2.*x))/(2.*H_of_x(x));
 }
 
 double BackgroundCosmology::dHpdx_of_x(double x) const{
-  return pow(M_E, x)*(H_of_x(x) + dHdx_of_x(x));
+  return exp(x)*(H_of_x(x) + dHdx_of_x(x));
 }
 
 double BackgroundCosmology::ddHddx_of_x(double x) const{
   double OmegaM = OmegaB + OmegaCDM;
   double OmegaRad = OmegaR + OmegaNu;
 
-  double t1 = (9.+3.*dHdx_of_x(x)/H_of_x(x))*OmegaM/pow(M_E, 3.*x);
-  double t2 = (16.+4.*dHdx_of_x(x)/H_of_x(x))*OmegaRad/pow(M_E, 4.*x);
-  double t3 = (4.+2.*dHdx_of_x(x)/H_of_x(x))*OmegaK/pow(M_E, 2.*x);
+  double t1 = (9.+3.*dHdx_of_x(x)/H_of_x(x))*OmegaM/exp(3.*x);
+  double t2 = (16.+4.*dHdx_of_x(x)/H_of_x(x))*OmegaRad/exp(4.*x);
+  double t3 = (4.+2.*dHdx_of_x(x)/H_of_x(x))*OmegaK/exp(2.*x);
 
   return H0*H0/(2.*H_of_x(x))*(t1 + t2 + t3);
 }
 
 double BackgroundCosmology::ddHpddx_of_x(double x) const{
-  return pow(M_E, x)*(H_of_x(x) + 2.*dHdx_of_x(x) + ddHddx_of_x(x));
+  return exp(x)*(H_of_x(x) + 2.*dHdx_of_x(x) + ddHddx_of_x(x));
 }
 
 double BackgroundCosmology::get_OmegaB(double x) const{
@@ -183,7 +183,7 @@ double BackgroundCosmology::get_OmegaB(double x) const{
     return OmegaB;
   }
   else {
-    return pow(H0, 2.)*OmegaB/(pow(M_E, 3.*x)*pow(H_of_x(x), 2.));
+    return pow(H0, 2.)*OmegaB/(exp(3.*x)*pow(H_of_x(x), 2.));
   }
 }
 
@@ -197,7 +197,7 @@ double BackgroundCosmology::get_OmegaR(double x) const{
     return OmegaR;
   }
   else {
-    return pow(H0, 2.)*OmegaR/(pow(M_E, 4.*x)*pow(H_of_x(x), 2.));
+    return pow(H0, 2.)*OmegaR/(exp(4.*x)*pow(H_of_x(x), 2.));
   }
 }
 
@@ -210,7 +210,7 @@ double BackgroundCosmology::get_OmegaNu(double x) const{
     return OmegaNu;
   }
   else {
-    return pow(H0, 2.)*OmegaNu/(pow(M_E, 4.*x)*pow(H_of_x(x), 2.));
+    return pow(H0, 2.)*OmegaNu/(exp(4.*x)*pow(H_of_x(x), 2.));
   }
 }
 
@@ -219,7 +219,7 @@ double BackgroundCosmology::get_OmegaCDM(double x) const{
     return OmegaCDM;
   }
   else {
-    return pow(H0, 2.)*OmegaCDM/(pow(M_E, 3.*x)*pow(H_of_x(x), 2.));
+    return pow(H0, 2.)*OmegaCDM/(exp(3.*x)*pow(H_of_x(x), 2.));
   }
 }
 
@@ -237,7 +237,7 @@ double BackgroundCosmology::get_OmegaK(double x) const{
     return OmegaK;
   }
   else {
-    return pow(H0, 2.)*OmegaK/(pow(M_E, 2.)*pow(H_of_x(x), 2.));
+    return pow(H0, 2.)*OmegaK/(exp(2.*x)*pow(H_of_x(x), 2.));
   }
 }
 
