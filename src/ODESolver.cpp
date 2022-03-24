@@ -3,7 +3,7 @@
 const char *ODE_ERROR = "Error in the ODE routines\n";
 
 //==================================================================
-// Wrappers for conversions between std::function and the raw 
+// Wrappers for conversions between std::function and the raw
 // function pointer required by GSL
 //==================================================================
 
@@ -37,9 +37,9 @@ int jacobian_wrapper(double t, const double *y, double *dfdy, double *dfdt, void
 ODESolver::ODESolver(double hstart, double abserr, double relerr) : hstart(hstart), abserr(abserr), relerr(relerr) {}
 
 void ODESolver::solve(
-    ODEFunction & ode_equation, 
-    Vector& xarr, 
-    Vector& yinitial, 
+    ODEFunction & ode_equation,
+    Vector& xarr,
+    Vector& yinitial,
     const gsl_odeiv2_step_type *stepper,
     ODEFunctionJacobian & jacobian){
   struct ParamWrapper equations(ode_equation, jacobian);
@@ -51,10 +51,10 @@ void ODESolver::solve(
 //==================================================================
 
 void ODESolver::solve(
-    ODEFunctionPointer ode_equation, 
-    void *parameters, 
-    Vector& xarr, 
-    Vector& yinitial, 
+    ODEFunctionPointer ode_equation,
+    void *parameters,
+    Vector& xarr,
+    Vector& yinitial,
     const gsl_odeiv2_step_type *stepper,
     ODEFunctionPointerJacobian jacobian){
 
@@ -86,7 +86,7 @@ void ODESolver::solve(
   // Allocate memory for the the results: data[i][j] = y_j(x_i)
   data            = std::vector< Vector >(xarr.size(), yinitial);
   derivative_data = std::vector< Vector >(xarr.size(), dydx);
-    
+
   if(verbose){
     std::cout << "ODESolver step " << std::setw(5) << 0 << " / " << num_x_points-1 << " x: [" << std::setw(10) << x << "] ";
     std::cout << "y: [";
@@ -184,4 +184,3 @@ void ODESolver::set_accuracy(const double h, const double a, const double r){
   abserr = a;
   relerr = r;
 }
-

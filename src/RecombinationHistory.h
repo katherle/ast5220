@@ -14,33 +14,33 @@ class RecombinationHistory{
 
     // The cosmology we use
     BackgroundCosmology *cosmo = nullptr;
-    
+
     // Helium fraction
     double Yp;
- 
+
     // The start and end points for recombination arrays (can be modified)
     const double x_start  = Constants.x_start;
     const double x_end    = Constants.x_end;
-    
+
     // Numbers of points of Xe,ne array (modify as you see fit)
     const int npts_rec_arrays = 4000;
-  
+
     // Xe for when to switch between Saha and Peebles
     const double Xe_saha_limit = 0.99;
 
     //===============================================================
     // [1] Computation of Xe (Saha and Peebles equation)
     //===============================================================
- 
+
     // Compute Xe from the Saha equation
     std::pair<double,double> electron_fraction_from_saha_equation(double x) const;
-    
+
     // Right hand side of the dXedx Peebles equation
     int rhs_peebles_ode(double x, const double *y, double *dydx);
-    
-    // Solve for Xe 
+
+    // Solve for Xe
     void solve_number_density_electrons();
-    
+
     //===============================================================
     // [2] Compute tau and visibility functions
     //===============================================================
@@ -50,20 +50,21 @@ class RecombinationHistory{
 
     // Splines contained in this class
     Spline log_Xe_of_x_spline{"Xe"};
-    Spline tau_of_x_spline{"tau"}; 
-    Spline g_tilde_of_x_spline{"g"};  
+    Spline log_ne_of_x_spline{"ne"};
+    Spline tau_of_x_spline{"tau"};
+    Spline g_tilde_of_x_spline{"g"};
 
   public:
 
     // Construtors
     RecombinationHistory() = delete;
     RecombinationHistory(
-        BackgroundCosmology *cosmo, 
+        BackgroundCosmology *cosmo,
         double Yp);
 
     // Do all the solving
     void solve();
-    
+
     // Print some useful info about the class
     void info() const;
 
