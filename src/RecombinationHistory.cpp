@@ -31,7 +31,7 @@ void RecombinationHistory::solve(){
 void RecombinationHistory::solve_number_density_electrons(){
   Utils::StartTiming("Xe");
 
-  Vector x_array = Utils::linspace(x_start, x_end, npts_rec_arrays);
+  Vector x_array = Utils::linspace(x_start, 0.0, npts_rec_arrays);
   Vector Xe_arr(npts_rec_arrays);
   Vector ne_arr(npts_rec_arrays);
 
@@ -187,7 +187,7 @@ void RecombinationHistory::solve_for_optical_depth_tau(){
 
   // Set up x-arrays to integrate over.
   const int npts = 1000;
-  Vector x_array = Utils::linspace(x_end, x_start, npts); //integrate backwards
+  Vector x_array = Utils::linspace(0.0, x_start, npts); //integrate backwards
 
   // The ODE
   ODEFunction dtaudx = [&](double x, const double *tau, double *dtaudx){
@@ -339,7 +339,7 @@ void RecombinationHistory::output(const std::string filename) const{
   std::ofstream fp(filename.c_str());
   const int npts       = 5000;
   const double x_min   = x_start;
-  const double x_max   = x_end;
+  const double x_max   = 0.0;
 
   Vector x_array = Utils::linspace(x_min, x_max, npts);
   auto print_data = [&] (const double x) {

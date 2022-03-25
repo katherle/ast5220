@@ -49,7 +49,7 @@ extern struct ConstantsAndUnits {
 
   // Min and max x-value
   const double x_start = log(1e-9);
-  const double x_end   = 0.0;
+  const double x_end   = 5.0;
 
   // Include polarization and/or neutrinos?
   const bool polarization  = true;
