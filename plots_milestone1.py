@@ -40,7 +40,7 @@ x = background["x"] #for convenience
 #find today's values:
 H0 = 67*u.km/u.s/u.Mpc
 TCMB = 2.7255*u.K
-Neff = 0
+Neff = 3.046
 
 omegaM0 = 0.05+0.267
 omegarad0 = 2*np.pi**2/30*(const.k_B*TCMB)**4/(const.hbar**3 * const.c**5)*8*np.pi*const.G/(3*H0**2)
