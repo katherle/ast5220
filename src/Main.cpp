@@ -51,9 +51,6 @@ int main(int argc, char **argv){
   // Output recombination quantities
   rec.output("recombination.txt");
 
-  // Remove when module is completed
-  return 0;
-
   //=========================================================================
   // Module III
   //=========================================================================
