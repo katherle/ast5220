@@ -55,7 +55,6 @@ void RecombinationHistory::solve_number_density_electrons(){
     }
     else {
       // The Peebles ODE equation
-      // debugging hint: if(rand() % 1000 == 0) Cout << x << “\n”;
       auto x_array_peebles = Vector({x_array[i-1], x_array[i]});
       ODESolver peebles_Xe_ode;
       ODEFunction dXedx = [&](double x, const double *Xe, double *dXedx){
@@ -79,7 +78,6 @@ void RecombinationHistory::solve_number_density_electrons(){
 
       ne_arr[i] = Xe_arr[i] * OmegaB*rho_crit/(Constants.m_H*pow(a, 3.));
     }
-    //std::cout << Xe_arr[i] << std::endl;
   }
 
   //create splines
@@ -172,7 +170,6 @@ int RecombinationHistory::rhs_peebles_ode(double x, const double *Xe, double *dX
   double Cr = (lambda_2s1s + lambda_alpha)/(lambda_2s1s + lambda_alpha + beta2); //dimensionless
 
   dXedx[0] = Cr/H*(beta*(1-X_e) - n_H*alpha2*pow(X_e, 2.));
-  //std::cout << x << " " << X_e << " " << dXedx[0] << "\n";
 
   return GSL_SUCCESS;
 }
@@ -282,10 +279,6 @@ double RecombinationHistory::get_Yp() const{
 //====================================================
 void RecombinationHistory::info() const{
   //find x for which tau(x) = 1
-  //I know there has got to be a c++ minimization algorithm out there already
-  //but I got fed up looking for one that didn't require me to rewrite half the class
-  //so I decided it was simpler to write my own
-  //I was right this took like ten minutes
   Vector x_dec{-7.2, -6.9};
   double x_1 = 0.; //temporary storage
   int i = 0, max_i = 100;
