@@ -5,9 +5,9 @@
 //====================================================
 
 Perturbations::Perturbations(
-    BackgroundCosmology *cosmo, 
-    RecombinationHistory *rec) : 
-  cosmo(cosmo), 
+    BackgroundCosmology *cosmo,
+    RecombinationHistory *rec) :
+  cosmo(cosmo),
   rec(rec)
 {}
 
@@ -32,12 +32,12 @@ void Perturbations::solve(){
 void Perturbations::integrate_perturbations(){
   Utils::StartTiming("integrateperturbation");
 
-  //===================================================================
-  // TODO: Set up the k-array for the k's we are going to integrate over
-  // Start at k_min end at k_max with n_k points with either a
-  // quadratic or a logarithmic spacing
-  //===================================================================
-  Vector k_array(n_k);
+  Vector k_array = Utils::linspace(log(k_min), log(k_max), n_k);
+
+  //log spacing
+  for (int i = 0; i < n_k; i++){
+    k_array[i] = exp(k_array[i]);
+  }
 
   // Loop over all wavenumbers
   for(int ik = 0; ik < n_k; ik++){
@@ -102,8 +102,8 @@ void Perturbations::integrate_perturbations(){
     // TODO: remember to store the data found from integrating so we can
     // spline it below
     //
-    // To compute a 2D spline of a function f(x,k) the data must be given 
-    // to the spline routine as a 1D array f_array with the points f(ix, ik) 
+    // To compute a 2D spline of a function f(x,k) the data must be given
+    // to the spline routine as a 1D array f_array with the points f(ix, ik)
     // stored as f_array[ix + n_x * ik]
     // Example:
     // Vector x_array(n_x);
@@ -137,22 +137,32 @@ void Perturbations::integrate_perturbations(){
 // tight coupling regime)
 //====================================================
 Vector Perturbations::set_ic(const double x, const double k) const{
-
-  // The vector we are going to fill
-  Vector y_tc(Constants.n_ell_tot_tc);
-
   //=============================================================================
   // Compute where in the y_tc array each component belongs
   // This is just an example of how to do it to make it easier
   // Feel free to organize the component any way you like
   //=============================================================================
-  
+
   // For integration of perturbations in tight coupling regime (Only 2 photon multipoles + neutrinos needed)
   const int n_ell_theta_tc      = Constants.n_ell_theta_tc;
   const int n_ell_neutrinos_tc  = Constants.n_ell_neutrinos_tc;
   const int n_ell_tot_tc        = Constants.n_ell_tot_tc;
   const bool polarization       = Constants.polarization;
   const bool neutrinos          = Constants.neutrinos;
+
+  // useful quantities
+  double f_v    = 0.0;
+  if(neutrinos){
+    double OmegaNu    = cosmo->get_OmegaNu();
+    double OmegaRtot  = cosmo->get_OmegaRtot();
+    f_v               = OmegaNu/(OmegaRtot);
+  }
+  const double c      = Constants.c;
+  const double Hp     = cosmo->Hp_of_x(x);
+  const double dtau   = rec->dtaudx_of_x(x);
+
+  // The vector we are going to fill
+  Vector y_tc(n_ell_tot_tc);
 
   // References to the tight coupling quantities
   double &delta_cdm    =  y_tc[Constants.ind_deltacdm_tc];
@@ -163,42 +173,43 @@ Vector Perturbations::set_ic(const double x, const double k) const{
   double *Theta        = &y_tc[Constants.ind_start_theta_tc];
   double *Nu           = &y_tc[Constants.ind_start_nu_tc];
 
-  //=============================================================================
-  // TODO: Set the initial conditions in the tight coupling regime
-  //=============================================================================
-  // ...
-  // ...
-
   // SET: Scalar quantities (Gravitational potential, baryons and CDM)
-  // ...
-  // ...
+  double psi = -1./(3./2. + 2.*f_v/5.);
+  Phi       = -(1. + 2.*f_v/5.)*psi;
+  delta_cdm = -3.*psi/2.;
+  delta_b   = delta_cdm;
+  v_cdm     = -c*k*psi/(2.*Hp);
+  v_b       = v_cdm;
 
   // SET: Photon temperature perturbations (Theta_ell)
-  // ...
-  // ...
+  //theta0
+  *Theta = -psi/2.;
+
+  //theta1
+  Theta++;
+  *Theta = c*k*psi/(6.*Hp);
 
   // SET: Neutrino perturbations (N_ell)
   if(neutrinos){
-    // ...
-    // ...
+    // Not included
   }
 
   return y_tc;
 }
 
 //====================================================
-// Set IC for the full ODE system after tight coupling 
+// Set IC for the full ODE system after tight coupling
 // regime ends
 //====================================================
 
 Vector Perturbations::set_ic_after_tight_coupling(
-    const Vector &y_tc, 
-    const double x, 
+    const Vector &y_tc,
+    const double x,
     const double k) const{
 
   // Make the vector we are going to fill
   Vector y(Constants.n_ell_tot_full);
-  
+
   //=============================================================================
   // Compute where in the y array each component belongs and where corresponding
   // components are located in the y_tc array
@@ -269,20 +280,43 @@ Vector Perturbations::set_ic_after_tight_coupling(
 }
 
 //====================================================
-// The time when tight coupling end
+// The time when tight coupling ends
 //====================================================
 
 double Perturbations::get_tight_coupling_time(const double k) const{
-  double x_tight_coupling_end = 0.0;
+  const double c     = Constants.c;
+  const double x_rec = rec->get_x_rec();
 
-  //=============================================================================
-  // TODO: compute and return x for when tight coupling ends
-  // Remember all the three conditions in Callin
-  //=============================================================================
-  // ...
-  // ...
+  // Remember all the three conditions in Callin:
+  // |tau'| > 10
+  // |k/(Hp tau')| < 1/10
+  // x < x_rec
 
-  return x_tight_coupling_end;
+  Vector x = {x_rec, x_start};
+  double x1;
+  int i = 0, max_i  = 100;
+  do{
+    x1 = x[1];
+    double dtaudx = rec->dtaudx_of_x(x1);
+    double ckH = c*k/(cosmo->Hp_of_x(x1));
+
+    if (abs(dtaudx) < 10.*std::max(1., ckH)){
+      x[1] -= abs(x[0] - x[1])/2.;
+      x[0] = x1;
+    }
+    if (abs(dtaudx) > 10.*std::max(1., ckH)){
+      x[1] += abs(x[0] - x[1])/2.;
+      x[0] = x1;
+    }
+    i++;
+  }
+  while(x[1] != x[0] && i < max_i);
+
+  // if(i == max_i){
+  //   std::cout << "get_tight_coupling_time Warning: max number of iterations reached (k=" << k <<")" << std::endl;
+  // }
+
+  return(x[1]);
 }
 
 //====================================================
@@ -310,7 +344,7 @@ void Perturbations::compute_source_functions(){
     for(auto ik = 0; ik < k_array.size(); ik++){
       const double k = k_array[ik];
 
-      // NB: This is the format the data needs to be stored 
+      // NB: This is the format the data needs to be stored
       // in a 1D array for the 2D spline routine source(ix,ik) -> S_array[ix + nx * ik]
       const int index = ix + n_x * ik;
 
@@ -355,7 +389,7 @@ int Perturbations::rhs_tight_coupling_ode(double x, double k, const double *y, d
   // This is just an example of how to do it to make it easier
   // Feel free to organize the component any way you like
   //=============================================================================
-  
+
   // For integration of perturbations in tight coupling regime (Only 2 photon multipoles + neutrinos needed)
   const int n_ell_theta_tc      = Constants.n_ell_theta_tc;
   const int n_ell_neutrinos_tc  = Constants.n_ell_neutrinos_tc;
@@ -394,9 +428,7 @@ int Perturbations::rhs_tight_coupling_ode(double x, double k, const double *y, d
 
   // SET: Neutrino mutlipoles (Nu_ell)
   if(neutrinos){
-    // ...
-    // ...
-    // ...
+    // Not included
   }
 
   return GSL_SUCCESS;
@@ -407,7 +439,7 @@ int Perturbations::rhs_tight_coupling_ode(double x, double k, const double *y, d
 //====================================================
 
 int Perturbations::rhs_full_ode(double x, double k, const double *y, double *dydx){
-  
+
   //=============================================================================
   // Compute where in the y / dydx array each component belongs
   // This is just an example of how to do it to make it easier
@@ -601,4 +633,3 @@ void Perturbations::output(const double k, const std::string filename) const{
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);
 }
-
