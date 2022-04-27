@@ -21,7 +21,8 @@ void Perturbations::solve(){
   integrate_perturbations();
 
   // Compute source functions and spline the result
-  compute_source_functions();
+  // commented out to avoid segmentation fault error
+  //compute_source_functions();
 }
 
 //====================================================
@@ -33,10 +34,20 @@ void Perturbations::integrate_perturbations(){
   Utils::StartTiming("integrateperturbation");
 
   Vector k_array = Utils::linspace(log(k_min), log(k_max), n_k);
+  //log spacing
+  for (int k = 0; k < n_k; k++){
+    k_array[k] = exp(k_array[k]);
+  }
   Vector x_array = Utils::linspace(x_start, x_end, n_x);
 
   //declare vectors to store data in later
   Vector delta_cdm(n_x*n_k, 0.);
+  Vector v_cdm(n_x*n_k, 0.);
+  Vector delta_b(n_x*n_k, 0.);
+  Vector v_b(n_x*n_k, 0.);
+  Vector Theta0(n_x*n_k, 0.);
+  Vector Theta1(n_x*n_k, 0.);
+  Vector Theta2(n_x*n_k, 0.);
 
   // Loop over all wavenumbers
   for(int ik = 0; ik < n_k; ik++){
@@ -47,8 +58,7 @@ void Perturbations::integrate_perturbations(){
       if(ik == n_k-1) std::cout << std::endl;
     }
 
-    //log spacing
-    double k = exp(k_array[ik]);
+    double k = k_array[ik];
 
     // Find value to integrate to
     double x_end_tight = get_tight_coupling_time(k);
@@ -62,15 +72,8 @@ void Perturbations::integrate_perturbations(){
     int index_tc = std::distance(x_dummy.begin(), it);
     Vector x_tc = {x_array.begin(), x_array.begin()+index_tc};
 
-    //===================================================================
-    // TODO: Tight coupling integration
-    // Remember to implement the routines:
-    // set_ic : The IC at the start
-    // rhs_tight_coupling_ode : The dydx for our coupled ODE system
-    //===================================================================
-
     // Set up initial conditions in the tight coupling regime
-    auto y_tight_coupling_ini = set_ic(x_start, k);
+    Vector y_tight_coupling_ini = set_ic(x_start, k);
 
     // The tight coupling ODE system
     ODEFunction dydx_tight_coupling = [&](double x, const double *y, double *dydx){
@@ -81,7 +84,7 @@ void Perturbations::integrate_perturbations(){
     ODESolver y_tight_coupling;
     y_tight_coupling.solve(dydx_tight_coupling, x_tc, y_tight_coupling_ini);
 
-    auto y_tc = y_tight_coupling.get_data_by_component(0);
+    auto y_tc = y_tight_coupling.get_data();
 
     //====i===============================================================
     // TODO: Full equation integration
@@ -90,8 +93,8 @@ void Perturbations::integrate_perturbations(){
     // rhs_full_ode : The dydx for our coupled ODE system
     //===================================================================
 
-    // Set up initial conditions (y_tight_coupling is the solution at the end of tight coupling)
-    // auto y_full_ini = set_ic_after_tight_coupling(y_tight_coupling, x_end_tight, k);
+    // Set up initial conditions
+    auto y_full_ini = set_ic_after_tight_coupling(y_tc[index_tc], x_end_tight, k);
 
     // The full ODE system
     ODEFunction dydx_full = [&](double x, const double *y, double *dydx){
@@ -127,7 +130,12 @@ void Perturbations::integrate_perturbations(){
     //===================================================================
 
     for (int i = 0; i<index_tc; i++){
-      delta_cdm[i + n_x*k] = y_tc[Constants.ind_deltacdm_tc];
+      delta_cdm[i + n_x*k] = y_tc[i][Constants.ind_deltacdm_tc];
+      v_cdm[i + n_x*k] = y_tc[i][Constants.ind_vcdm_tc];
+      delta_b[i + n_x*k] = y_tc[i][Constants.ind_deltab_tc];
+      v_b[i + n_x*k] = y_tc[i][Constants.ind_vb_tc];
+      Theta0[i + n_x*k] = y_tc[i][Constants.ind_start_theta_tc];
+      Theta1[i + n_x*k] = y_tc[i][Constants.ind_start_theta_tc + 1];
     }
   }
   Utils::EndTiming("integrateperturbation");
@@ -135,7 +143,15 @@ void Perturbations::integrate_perturbations(){
   //=============================================================================
   // TODO: Make all splines needed: Theta0,Theta1,Theta2,Phi,Psi,...
   //=============================================================================
-  delta_cdm_spline.create(x_array, k_array, delta_cdm);
+  delta_cdm_spline.create(x_array, k_array, delta_cdm, "delta_cdm_spline");
+  v_cdm_spline.create(x_array, k_array, v_cdm, "v_cdm_spline");
+  delta_b_spline.create(x_array, k_array, delta_b, "delta_b_spline");
+  v_b_spline.create(x_array, k_array, v_b, "v_b_spline");
+
+  Theta_spline = std::vector<Spline2D>(Constants.n_ell_theta);
+  Theta_spline[0].create(x_array, k_array, Theta0, "Theta0_spline");
+  Theta_spline[1].create(x_array, k_array, Theta1, "Theta1_spline");
+  Theta_spline[2].create(x_array, k_array, Theta2, "Theta2_spline");
 }
 
 //====================================================
@@ -143,13 +159,9 @@ void Perturbations::integrate_perturbations(){
 // tight coupling regime)
 //====================================================
 Vector Perturbations::set_ic(const double x, const double k) const{
-  //=============================================================================
-  // Compute where in the y_tc array each component belongs
-  // This is just an example of how to do it to make it easier
-  // Feel free to organize the component any way you like
-  //=============================================================================
 
-  // For integration of perturbations in tight coupling regime (Only 2 photon multipoles + neutrinos needed)
+  // For integration of perturbations in tight coupling regime
+  // (Only 2 photon multipoles + neutrinos needed)
   const int n_ell_theta_tc      = Constants.n_ell_theta_tc;
   const int n_ell_neutrinos_tc  = Constants.n_ell_neutrinos_tc;
   const int n_ell_tot_tc        = Constants.n_ell_tot_tc;
@@ -219,8 +231,6 @@ Vector Perturbations::set_ic_after_tight_coupling(
   //=============================================================================
   // Compute where in the y array each component belongs and where corresponding
   // components are located in the y_tc array
-  // This is just an example of how to do it to make it easier
-  // Feel free to organize the component any way you like
   //=============================================================================
 
   // Number of multipoles we have in the full regime
@@ -244,42 +254,61 @@ Vector Perturbations::set_ic_after_tight_coupling(
   const double *Nu_tc           = &y_tc[Constants.ind_start_nu_tc];
 
   // References to the quantities we are going to set
-  double &delta_cdm       =  y[Constants.ind_deltacdm_tc];
-  double &delta_b         =  y[Constants.ind_deltab_tc];
-  double &v_cdm           =  y[Constants.ind_vcdm_tc];
-  double &v_b             =  y[Constants.ind_vb_tc];
-  double &Phi             =  y[Constants.ind_Phi_tc];
-  double *Theta           = &y[Constants.ind_start_theta_tc];
-  double *Theta_p         = &y[Constants.ind_start_thetap_tc];
-  double *Nu              = &y[Constants.ind_start_nu_tc];
+  double &delta_cdm       =  y[Constants.ind_deltacdm];
+  double &delta_b         =  y[Constants.ind_deltab];
+  double &v_cdm           =  y[Constants.ind_vcdm];
+  double &v_b             =  y[Constants.ind_vb];
+  double &Phi             =  y[Constants.ind_Phi];
+  double *Theta           = &y[Constants.ind_start_theta];
+  double *Theta_p         = &y[Constants.ind_start_thetap];
+  double *Nu              = &y[Constants.ind_start_nu];
+
+  // Useful quantities
+  double f_v    = 0.0;
+  if(neutrinos){
+    double OmegaNu    = cosmo->get_OmegaNu();
+    double OmegaRtot  = cosmo->get_OmegaRtot();
+    f_v               = OmegaNu/(OmegaRtot);
+  }
+  const double c = Constants.c;
+  const double Hp     = cosmo->Hp_of_x(x);
+  const double dtau   = rec->dtaudx_of_x(x);
 
   //=============================================================================
   // TODO: fill in the initial conditions for the full equation system below
   // NB: remember that we have different number of multipoles in the two
   // regimes so be careful when assigning from the tc array
   //=============================================================================
-  // ...
-  // ...
-  // ...
 
   // SET: Scalar quantities (Gravitational potental, baryons and CDM)
-  // ...
-  // ...
+  // problem here with segmentation fault
+  double Psi = -1./(3./2 + 2.*f_v/5.);
+  Phi = Phi_tc;
+  std::cout << "No segmentation fault yet" << std::endl;
+  delta_cdm = delta_cdm_tc;
+  delta_b = delta_b_tc;
+  v_cdm = v_cdm_tc;
+  v_b = v_b_tc;
 
   // SET: Photon temperature perturbations (Theta_ell)
-  // ...
-  // ...
+  y[Constants.ind_start_theta] = y_tc[Constants.ind_start_theta_tc]; //theta0
+  y[Constants.ind_start_theta + 1] = y_tc[Constants.ind_start_theta_tc + 1]; //theta1
+  y[Constants.ind_start_theta + 2] = -20.*c*k/(45.*Hp*dtau);
+  if(polarization){
+    y[Constants.ind_start_theta + 2] = -8.*c*k/(15.*Hp*dtau);
+  }
+  for(int l = 3; l < n_ell_theta; l++){
+    y[Constants.ind_start_theta + l] = -l/(2*l + 1) * c*k/(Hp*dtau)*y[Constants.ind_start_theta + l-1];
+  }
 
   // SET: Photon polarization perturbations (Theta_p_ell)
   if(polarization){
-    // ...
-    // ...
+    //not included
   }
 
   // SET: Neutrino perturbations (N_ell)
   if(neutrinos){
-    // ...
-    // ...
+    //not included
   }
 
   return y;
@@ -653,6 +682,7 @@ void Perturbations::output(const double k, const std::string filename) const{
   std::ofstream fp(filename.c_str());
   const int npts = 5000;
   auto x_array = Utils::linspace(x_start, x_end, npts);
+
   auto print_data = [&] (const double x) {
     double arg = k * (cosmo->eta_of_x(0.0) - cosmo->eta_of_x(x));
     fp << x                  << " ";
@@ -662,15 +692,14 @@ void Perturbations::output(const double k, const std::string filename) const{
     fp << get_v_b(x, k)      << " ";
     fp << get_Theta(x,k,0)   << " ";
     fp << get_Theta(x,k,1)   << " ";
-    fp << get_Theta(x,k,2)   << " ";
-    fp << get_Phi(x,k)       << " ";
-    fp << get_Psi(x,k)       << " ";
-    fp << get_Pi(x,k)        << " ";
-    fp << get_Source_T(x,k)  << " ";
-    fp << get_Source_T(x,k) * Utils::j_ell(5,   arg)           << " ";
-    fp << get_Source_T(x,k) * Utils::j_ell(50,  arg)           << " ";
-    fp << get_Source_T(x,k) * Utils::j_ell(500, arg)           << " ";
-    fp << "\n";
+    fp << get_Theta(x,k,2)   << "\n";
+    // fp << get_Phi(x,k)       << " ";
+    // fp << get_Psi(x,k)       << " ";
+    // fp << get_Pi(x,k)        << " ";
+    // fp << get_Source_T(x,k)  << " ";
+    // fp << get_Source_T(x,k) * Utils::j_ell(5,   arg)           << " ";
+    // fp << get_Source_T(x,k) * Utils::j_ell(50,  arg)           << " ";
+    // fp << get_Source_T(x,k) * Utils::j_ell(500, arg)           << " ";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);
 }

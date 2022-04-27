@@ -38,7 +38,7 @@ ddg = recombination["ddgddx_tilde"]
 
 #plot tau and its first two derivatives
 fig, ax = plt.subplots()
-custom_cycler = cycler("color", cm.viridis(np.linspace(0, 1, 3)))
+custom_cycler = cycler("color", cm.viridis(np.linspace(0, 0.9, 3)))
 ax.set_prop_cycle(custom_cycler)
 ax.plot(x, tau, label = r"$\tau(x)$")
 ax.plot(x, -dtau, label = r"$-\tau'(x)$")
