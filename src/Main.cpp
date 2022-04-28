@@ -19,6 +19,11 @@ int main(int argc, char **argv){
   double Neff        = 0.0;
   double TCMB        = 2.7255;
 
+  // test with toy cosmology:
+  // double h           = 0.7;
+  // double OmegaB      = 0.05;
+  // double OmegaCDM    = 0.45;
+
   //Recombination parameters
   double Yp          = 0.0;
 
@@ -61,8 +66,14 @@ int main(int argc, char **argv){
   pert.info();
 
   // Output perturbation quantities
-  double kvalue = 0.01 / Constants.Mpc;
+  double kvalue = 0.1 / Constants.Mpc;
+  pert.output(kvalue, "perturbations_k0.1.txt");
+
+  kvalue = 0.01 / Constants.Mpc;
   pert.output(kvalue, "perturbations_k0.01.txt");
+
+  kvalue = 0.001 / Constants.Mpc;
+  pert.output(kvalue, "perturbations_k0.001.txt");
 
   // Remove when module is completed
   return 0;

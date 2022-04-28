@@ -17,47 +17,82 @@ plt.rc('legend', frameon=False)
 plt.rc('figure', figsize=(7, 7/1.25)) # Larger figure sizes
 plt.rc('font', size=14)
 
-tmp = np.asarray(pd.read_csv('perturbations_k0.01.txt', sep = " ", header = None))
-columns = ["x", "delta_cdm", "v_cdm", "delta_b", "v_b", "Theta0", "Theta1", "Theta2"]
-#"Phi", "Psi", "Pi", "ST1", "ST5", "ST50", "ST500"]
-perturb_1e2 = QTable(tmp, names = columns)
-#unit_names = [" ", " ", " ", " ", " ", " ", " ", " ", " "]
-#for key, unit in zip(recombination.keys(), unit_names):
-#    recombination[key].unit = unit
-#    recombination[key] = recombination[key].si
+tmp = np.asarray(pd.read_csv('perturbations_k0.1.txt', sep = " ", header = None))
+columns = ["x", "delta_cdm", "v_cdm", "delta_b", "v_b", "Theta0", "Theta1", "Phi"]
+perturb_1 = QTable(tmp, names = columns)
 
-#for convenience
-x_1e2 = perturb_1e2["x"]
-delta_cdm_1e2 = perturb_1e2["delta_cdm"]
-v_cdm_1e2 = perturb_1e2["v_cdm"]
-delta_b_1e2 = perturb_1e2["delta_b"]
-v_b_1e2 = perturb_1e2["v_b"]
-theta0_1e2 = perturb_1e2["Theta0"]
-theta1_1e2 = perturb_1e2["Theta1"]
-theta2_1e2 = perturb_1e2["Theta2"]
+tmp = np.asarray(pd.read_csv('perturbations_k0.01.txt', sep = " ", header = None))
+perturb_01 = QTable(tmp, names = columns)
+
+tmp = np.asarray(pd.read_csv('perturbations_k0.001.txt', sep = " ", header = None))
+perturb_001 = QTable(tmp, names = columns)
+
 
 #plot delta_cdm and v_cdm
 fig, ax = plt.subplots()
-custom_cycler = cycler("color", ['xkcd:turquoise', 'xkcd:lavender', 'xkcd:dark blue'])
+custom_cycler = cycler("color", ['xkcd:turquoise', 'xkcd:light purple', 'xkcd:dark blue'])
 ax.set_prop_cycle(custom_cycler)
-ax.plot(x_1e2, delta_cdm_1e2, label = "k = 0.01")
-ax.plot(x_1e2, delta_b_1e2, ls = "--", color = 'xkcd:turquoise')
+ax.plot(perturb_1["x"], np.abs(perturb_1["delta_cdm"]), label = "k = 0.1/Mpc")
+ax.plot(perturb_01["x"], np.abs(perturb_01["delta_cdm"]), label = "k = 0.01/Mpc")
+ax.plot(perturb_001["x"], np.abs(perturb_001["delta_cdm"]), label = "k = 0.001/Mpc")
+ax.plot(perturb_1["x"], np.abs(perturb_1["delta_b"]), ls = "--")
+ax.plot(perturb_01["x"], np.abs(perturb_01["delta_b"]), ls = "--")
+ax.plot(perturb_001["x"], np.abs(perturb_001["delta_b"]), ls = "--")
 ax.set_xlim([-18, 0])
-#ax.set_yscale("log")
+#ax.set_ylim([10**(-18), 10**5])
+ax.set_yscale("log")
 ax.set_title(r"$\delta_{\rm CDM}$, $\delta_b$")
 ax.grid()
 ax.legend()
-#plt.show()
+plt.show()
+
+fig, ax = plt.subplots()
+ax.set_prop_cycle(custom_cycler)
+ax.plot(perturb_1["x"], np.abs(perturb_1["v_cdm"]), label = "k = 0.1/Mpc")
+ax.plot(perturb_01["x"], np.abs(perturb_01["v_cdm"]), label = "k = 0.01/Mpc")
+ax.plot(perturb_001["x"], np.abs(perturb_001["v_cdm"]), label = "k = 0.001/Mpc")
+ax.plot(perturb_1["x"], np.abs(perturb_1["v_b"]), ls = "--")
+ax.plot(perturb_01["x"], np.abs(perturb_01["v_b"]), ls = "--")
+ax.plot(perturb_001["x"], np.abs(perturb_001["v_b"]), ls = "--")
+ax.set_xlim([-18, 0])
+ax.set_yscale("log")
+ax.set_title(r"$v_{\rm CDM}$, $v_b$")
+ax.grid()
+ax.legend()
+plt.show()
 
 #plot theta0
 fig, ax = plt.subplots()
 ax.set_prop_cycle(custom_cycler)
-ax.plot(x_1e2, theta0_1e2, label = "k = 0.01")
+ax.plot(perturb_1["x"], perturb_1["Theta0"], label = "k = 0.1/Mpc")
+ax.plot(perturb_01["x"], perturb_01["Theta0"], label = "k = 0.01/Mpc")
+ax.plot(perturb_001["x"], perturb_001["Theta0"], label = "k = 0.001/Mpc")
 ax.set_xlim([-18, 0])
 ax.set_title(r"$\Theta_0$")
 ax.grid()
 ax.legend()
-#plt.show()
+plt.show()
 
-for i in np.array([1]):
-    print(i)
+#plot theta1
+fig, ax = plt.subplots()
+ax.set_prop_cycle(custom_cycler)
+ax.plot(perturb_1["x"], perturb_1["Theta1"], label = "k = 0.1/Mpc")
+ax.plot(perturb_01["x"], perturb_01["Theta1"], label = "k = 0.01/Mpc")
+ax.plot(perturb_001["x"], perturb_001["Theta1"], label = "k = 0.001/Mpc")
+ax.set_xlim([-18, 0])
+ax.set_title(r"$\Theta_1$")
+ax.grid()
+ax.legend()
+plt.show()
+
+#plot phi
+fig, ax = plt.subplots()
+ax.set_prop_cycle(custom_cycler)
+ax.plot(perturb_1["x"], perturb_1["Phi"], label = "k = 0.1/Mpc")
+ax.plot(perturb_01["x"], perturb_01["Phi"], label = "k = 0.01/Mpc")
+ax.plot(perturb_001["x"], perturb_001["Phi"], label = "k = 0.001.Mpc")
+ax.set_xlim([-18, 0])
+ax.set_title(r"$\Phi$")
+ax.grid()
+ax.legend()
+plt.show()
