@@ -75,9 +75,6 @@ int main(int argc, char **argv){
   kvalue = 0.001 / Constants.Mpc;
   pert.output(kvalue, "perturbations_k0.001.txt");
 
-  // Remove when module is completed
-  return 0;
-
   //=========================================================================
   // Module IV
   //=========================================================================

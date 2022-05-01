@@ -112,7 +112,7 @@ void Perturbations::integrate_perturbations(){
     double a;
     double Hp;
     const double H0     = cosmo->get_H0();
-    const double OmegaR = cosmo->get_OmegaR(0.0);
+    const double OmegaR = cosmo->get_OmegaR(x);
     double dtau;
 
     for (int i = 0; i<index_tc; i++){
@@ -128,7 +128,7 @@ void Perturbations::integrate_perturbations(){
       Theta1[i + n_x*ik]    = y_tc[i][Constants.ind_start_theta_tc + 1];
       Theta2[i + n_x*ik]    = -20.*c*k/(45.*Hp*dtau)*Theta1[i + n_x*ik];
       Phi[i + n_x*ik]       = y_tc[i][Constants.ind_Phi_tc];
-      Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k*a), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
+      Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
     }
     for (int i = index_tc; i < n_x; i++){
       x = x_array[i];
@@ -143,14 +143,10 @@ void Perturbations::integrate_perturbations(){
       Theta1[i + n_x*ik]    = y_full[i-index_tc][Constants.ind_start_theta + 1];
       Theta2[i + n_x*ik]    = y_full[i-index_tc][Constants.ind_start_theta + 2];
       Phi[i + n_x*ik]       = y_full[i-index_tc][Constants.ind_Phi];
-      Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k*a), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
+      Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
     }
   }
   Utils::EndTiming("integrateperturbation");
-
-  //=============================================================================
-  // TODO: Make all splines needed: Theta0,Theta1,Theta2,Phi,Psi,...
-  //=============================================================================
 
   delta_cdm_spline.create(x_array, k_array, delta_cdm, "delta_cdm_spline");
   v_cdm_spline.create(x_array, k_array, v_cdm, "v_cdm_spline");
@@ -649,7 +645,6 @@ void Perturbations::info() const{
   std::cout << "k_min (1/Mpc): " << k_min * Constants.Mpc  << "\n";
   std::cout << "k_max (1/Mpc): " << k_max * Constants.Mpc  << "\n";
   std::cout << "n_k:           " << n_k              << "\n";
-  std::cout << "tight coupling end (k = 0.1/Mpc): " << get_tight_coupling_time(0.1/Constants.Mpc) << "\n";
   if(Constants.polarization)
     std::cout << "We include polarization\n";
   else
@@ -702,14 +697,7 @@ void Perturbations::output(const double k, const std::string filename) const{
   const int npts = 5000;
   auto x_array = Utils::linspace(x_start, 0.0, npts);
 
-  // std::cout << "Check initial conditions: " << "\n";
-  // std::cout << "Psi:           " << get_Psi(x_start, k)       << "\n";
-  // std::cout << "Phi:           " << get_Phi(x_start, k)       << "\n";
-  // std::cout << "delta_CDM:     " << get_delta_cdm(x_start, k) << "\n";
-  // std::cout << "v_CDM:         " << get_v_cdm(x_start, k)     << "\n";
-  // std::cout << "Theta0:        " << get_Theta(x_start, k, 0)  << "\n";
-  // std::cout << "Theta1:        " << get_Theta(x_start, k, 1)  << "\n";
-
+  std::cout << "Tight coupling end (k = " << k*Constants.Mpc << "/Mpc): " << get_tight_coupling_time(k) << std::endl;
 
   auto print_data = [&] (const double x) {
     double arg = k * (cosmo->eta_of_x(0.0) - cosmo->eta_of_x(x));
@@ -720,13 +708,13 @@ void Perturbations::output(const double k, const std::string filename) const{
     fp << get_v_b(x, k)      << " ";
     fp << get_Theta(x,k,0)   << " ";
     fp << get_Theta(x,k,1)   << " ";
-    fp << get_Phi(x,k)       << "\n";
-    // fp << get_Psi(x,k)       << " ";
-    // fp << get_Pi(x,k)        << " ";
+    fp << get_Phi(x,k)       << " ";
+    fp << get_Psi(x,k)       << "\n";
+    //fp << get_Pi(x,k)        << " ";
     // fp << get_Source_T(x,k)  << " ";
     // fp << get_Source_T(x,k) * Utils::j_ell(5,   arg)           << " ";
     // fp << get_Source_T(x,k) * Utils::j_ell(50,  arg)           << " ";
-    // fp << get_Source_T(x,k) * Utils::j_ell(500, arg)           << " ";
+    // fp << get_Source_T(x,k) * Utils::j_ell(500, arg)           << "\n";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);
 }
