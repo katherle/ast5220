@@ -21,8 +21,7 @@ void Perturbations::solve(){
   integrate_perturbations();
 
   // Compute source functions and spline the result
-  // commented out to avoid segmentation fault error
-  //compute_source_functions();
+  compute_source_functions();
 }
 
 //====================================================
@@ -45,11 +44,13 @@ void Perturbations::integrate_perturbations(){
   Vector v_cdm(n_x*n_k, 0.);
   Vector delta_b(n_x*n_k, 0.);
   Vector v_b(n_x*n_k, 0.);
+  Vector dv_b(n_x*n_k, 0.);
   Vector Theta0(n_x*n_k, 0.);
   Vector Theta1(n_x*n_k, 0.);
   Vector Theta2(n_x*n_k, 0.);
   Vector Phi(n_x*n_k, 0.);
   Vector Psi(n_x*n_k, 0.);
+  Vector Pi(n_x*n_k, 0.);
 
   // Loop over all wavenumbers
   for(int ik = 0; ik < n_k; ik++){
@@ -129,6 +130,7 @@ void Perturbations::integrate_perturbations(){
       Theta2[i + n_x*ik]    = -20.*c*k/(45.*Hp*dtau)*Theta1[i + n_x*ik];
       Phi[i + n_x*ik]       = y_tc[i][Constants.ind_Phi_tc];
       Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
+      Pi[i + n_x*ik]        = Theta2[i + n_x*ik]; //no polarization
     }
     for (int i = index_tc; i < n_x; i++){
       x = x_array[i];
@@ -144,6 +146,7 @@ void Perturbations::integrate_perturbations(){
       Theta2[i + n_x*ik]    = y_full[i-index_tc][Constants.ind_start_theta + 2];
       Phi[i + n_x*ik]       = y_full[i-index_tc][Constants.ind_Phi];
       Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
+      Pi[i + n_x*ik]        = Theta2[i + n_x*ik]; //no polarization
     }
   }
   Utils::EndTiming("integrateperturbation");
@@ -160,6 +163,7 @@ void Perturbations::integrate_perturbations(){
 
   Phi_spline.create(x_array, k_array, Phi, "Phi_spline");
   Psi_spline.create(x_array, k_array, Psi, "Psi_spline");
+  Pi_spline.create(x_array, k_array, Pi, "Pi_spline");
 }
 
 //====================================================
@@ -350,9 +354,9 @@ double Perturbations::get_tight_coupling_time(const double k) const{
   }
   while(x[1] != x[0] && i < max_i);
 
-  if(i == max_i){
-    std::cout << "get_tight_coupling_time Warning: max number of iterations reached (k = " << k*Constants.Mpc << "/Mpc)" << std::endl;
-  }
+  // if(i == max_i){
+  //   std::cout << "get_tight_coupling_time Warning: max number of iterations reached (k = " << k*Constants.Mpc << "/Mpc)" << std::endl;
+  // }
 
   return(x[1]);
 }
@@ -364,21 +368,22 @@ double Perturbations::get_tight_coupling_time(const double k) const{
 void Perturbations::compute_source_functions(){
   Utils::StartTiming("source");
 
-  //=============================================================================
-  // TODO: Make the x and k arrays to evaluate over and use to make the splines
-  //=============================================================================
-  // ...
-  // ...
-  Vector k_array;
-  Vector x_array;
+  Vector k_array = Utils::linspace(log(k_min), log(k_max), n_k);
+  //log spacing
+  for (int k = 0; k < n_k; k++){
+    k_array[k] = exp(k_array[k]);
+  }
+  Vector x_array = Utils::linspace(x_start, 0.0, n_x);
 
   // Make storage for the source functions (in 1D array to be able to pass it to the spline)
   Vector ST_array(k_array.size() * x_array.size());
-  Vector SE_array(k_array.size() * x_array.size());
+  //in principle there should be another source function for polarization
+  //however I have neglected polarization and set pi=theta2
 
   // Compute source functions
   for(auto ix = 0; ix < x_array.size(); ix++){
     const double x = x_array[ix];
+    const double a = exp(x);
     for(auto ik = 0; ik < k_array.size(); ik++){
       const double k = k_array[ik];
 
@@ -386,29 +391,55 @@ void Perturbations::compute_source_functions(){
       // in a 1D array for the 2D spline routine source(ix,ik) -> S_array[ix + nx * ik]
       const int index = ix + n_x * ik;
 
-      //=============================================================================
-      // TODO: Compute the source functions
-      //=============================================================================
-      // Fetch all the things we need...
-      // const double Hp       = cosmo->Hp_of_x(x);
-      // const double tau      = rec->tau_of_x(x);
-      // ...
-      // ...
+      // Fetch all the things we need
+      const double c         = Constants.c;
 
-      // Temperatur source
-      ST_array[index] = 0.0;
+      const double Hp        = cosmo->Hp_of_x(x);
+      const double dHp       = cosmo->dHpdx_of_x(x);
+      const double ddHp      = cosmo->ddHpddx_of_x(x);
+      const double H0        = cosmo->get_H0();
+      const double OmegaCDM  = cosmo->get_OmegaCDM();
+      const double OmegaB    = cosmo->get_OmegaB();
+      const double OmegaR    = cosmo->get_OmegaR();
+      const double R         = 4.*OmegaR/(3.*OmegaB*a);
 
-      // Polarization source
-      if(Constants.polarization){
-        SE_array[index] = 0.0;
-      }
+      const double g_tilde   = rec->g_tilde_of_x(x);
+      const double dg_tilde  = rec->dgdx_tilde_of_x(x);
+      const double ddg_tilde = rec->ddgddx_tilde_of_x(x);
+      const double tau       = rec->tau_of_x(x);
+      const double dtau      = rec->dtaudx_of_x(x);
+      const double ddtau     = rec->ddtauddx_of_x(x);
+
+      const double theta0    = get_Theta(x, k, 0);
+      const double theta1    = get_Theta(x, k, 1);
+      const double pi        = get_Pi(x, k);
+      const double dpi       = Pi_spline.deriv_x(x, k);
+      const double ddpi      = Pi_spline.deriv_xx(x, k);
+      const double psi       = get_Psi(x, k);
+      const double dpsi      = Psi_spline.deriv_x(x, k);
+      const double phi       = get_Phi(x, k);
+      const double dphi      = Phi_spline.deriv_x(x, k);
+      const double delta_cdm = get_delta_cdm(x, k);
+      const double delta_b   = get_delta_b(x, k);
+      const double vb        = get_v_b(x, k);
+      const double dvb       = v_b_spline.deriv_x(x, k);
+
+      // Temperature source
+      double t1 = g_tilde*(theta0 + psi + pi/4.);
+      double t2 = exp(-tau)*(dpsi-dphi);
+      double t3 = 1./(c*k)*(dHp*g_tilde*vb + Hp*dg_tilde*vb + Hp*g_tilde*dvb);
+      double t4 = 3./(4.*c*c*k*k)*(g_tilde*pi*(dHp*dHp + Hp*ddHp)
+                                    + 3.*Hp*dHp*(dg_tilde*pi + g_tilde*dpi)
+                                    + Hp*Hp*(ddg_tilde*pi + 2.*dg_tilde*dpi + g_tilde*ddpi));
+
+      ST_array[index] = t1 + t2 - t3 + t4;
     }
   }
 
   // Spline the source functions
   ST_spline.create (x_array, k_array, ST_array, "Source_Temp_x_k");
   if(Constants.polarization){
-    SE_spline.create (x_array, k_array, SE_array, "Source_Pol_x_k");
+    //SE_spline.create (x_array, k_array, SE_array, "Source_Pol_x_k");
   }
 
   Utils::EndTiming("source");
@@ -709,12 +740,12 @@ void Perturbations::output(const double k, const std::string filename) const{
     fp << get_Theta(x,k,0)   << " ";
     fp << get_Theta(x,k,1)   << " ";
     fp << get_Phi(x,k)       << " ";
-    fp << get_Psi(x,k)       << "\n";
-    //fp << get_Pi(x,k)        << " ";
-    // fp << get_Source_T(x,k)  << " ";
-    // fp << get_Source_T(x,k) * Utils::j_ell(5,   arg)           << " ";
-    // fp << get_Source_T(x,k) * Utils::j_ell(50,  arg)           << " ";
-    // fp << get_Source_T(x,k) * Utils::j_ell(500, arg)           << "\n";
+    fp << get_Psi(x,k)       << " ";
+    fp << get_Pi(x,k)        << " ";
+    fp << get_Source_T(x,k)  << " ";
+    fp << get_Source_T(x,k) * Utils::j_ell(5,   arg)           << " ";
+    fp << get_Source_T(x,k) * Utils::j_ell(50,  arg)           << " ";
+    fp << get_Source_T(x,k) * Utils::j_ell(500, arg)           << "\n";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);
 }
