@@ -18,7 +18,8 @@ plt.rc('figure', figsize=(7, 7/1.25)) # Larger figure sizes
 plt.rc('font', size=14)
 
 tmp = np.asarray(pd.read_csv('perturbations_k0.1.txt', sep = " ", header = None))
-columns = ["x", "delta_cdm", "v_cdm", "delta_b", "v_b", "Theta0", "Theta1", "Phi", "Psi"]
+columns = ["x", "delta_cdm", "v_cdm", "delta_b", "v_b", "Theta0", "Theta1", "Phi", "Psi",
+            "Pi", "ST_0", "ST_5", "ST_50", "ST_500"]
 perturb_1 = QTable(tmp, names = columns)
 
 tmp = np.asarray(pd.read_csv('perturbations_k0.01.txt', sep = " ", header = None))
