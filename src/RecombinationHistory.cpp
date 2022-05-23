@@ -275,46 +275,11 @@ double RecombinationHistory::get_Yp() const{
 }
 
 double RecombinationHistory::get_x_dec() const{
-  Vector x_dec{-7.2, -6.9};
-  double x_1 = 0.; //temporary storage
-  int i = 0, max_i = 100;
-
-  do {
-    i++;
-    x_1 = x_dec[1];
-    if (tau_of_x(x_dec[1]) > 1.0){
-      x_dec[1] += abs(x_dec[0] - x_dec[1])/2.;
-      x_dec[0] = x_1;
-    }
-    if (tau_of_x(x_dec[1]) < 1.0){
-      x_dec[1] -= abs(x_dec[0] - x_dec[1])/2.;
-      x_dec[0] = x_1;
-    }
-  }
-  while(x_dec[1] != x_dec[0] && i < max_i);
-
-  return(x_dec[1]);
+  return Utils::binary_search_for_value(tau_of_x_spline, 1.0, {-7.2, -6.9});
 }
 
 double RecombinationHistory::get_x_rec() const{
-  Vector x_rec{-7.2, -6.9};
-  double x_1 = 0.; //temporary storage
-  int i = 0, max_i = 100;
-  do {
-    i++;
-    x_1 = x_rec[1];
-    if (Xe_of_x(x_rec[1]) > 0.5){
-      x_rec[1] += abs(x_rec[0] - x_rec[1])/2.;
-      x_rec[0] = x_1;
-    }
-    if (Xe_of_x(x_rec[1]) < 0.5){
-      x_rec[1] -= abs(x_rec[0] - x_rec[1])/2.;
-      x_rec[0] = x_1;
-    }
-  }
-  while(x_rec[1] != x_rec[0] && i < max_i);
-
-  return(x_rec[1]);
+  return Utils::binary_search_for_value(log_Xe_of_x_spline, log(0.5), {-7.2, -6.9});
 }
 
 //====================================================
