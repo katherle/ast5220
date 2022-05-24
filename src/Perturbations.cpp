@@ -368,11 +368,7 @@ double Perturbations::get_tight_coupling_time(const double k) const{
 void Perturbations::compute_source_functions(){
   Utils::StartTiming("source");
 
-  Vector k_array = Utils::linspace(log(k_min), log(k_max), n_k);
-  //log spacing
-  for (int k = 0; k < n_k; k++){
-    k_array[k] = exp(k_array[k]);
-  }
+  Vector k_array = Utils::linspace(k_min, k_max, n_k);
   Vector x_array = Utils::linspace(x_start, 0.0, n_x);
 
   // Make storage for the source functions (in 1D array to be able to pass it to the spline)
