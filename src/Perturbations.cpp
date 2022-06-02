@@ -44,10 +44,11 @@ void Perturbations::integrate_perturbations(){
   Vector v_cdm(n_x*n_k, 0.);
   Vector delta_b(n_x*n_k, 0.);
   Vector v_b(n_x*n_k, 0.);
-  Vector dv_b(n_x*n_k, 0.);
   Vector Theta0(n_x*n_k, 0.);
   Vector Theta1(n_x*n_k, 0.);
   Vector Theta2(n_x*n_k, 0.);
+  Vector Theta3(n_x*n_k, 0.);
+  Vector Theta4(n_x*n_k, 0.);
   Vector Phi(n_x*n_k, 0.);
   Vector Psi(n_x*n_k, 0.);
   Vector Pi(n_x*n_k, 0.);
@@ -108,19 +109,19 @@ void Perturbations::integrate_perturbations(){
     auto y_full = y_full_ode.get_data();
 
     //store the data in vectors:
-    const double c      = Constants.c;
+    const double c = Constants.c;
+    const double H0 = cosmo->get_H0();
     double x;
-    double a;
     double Hp;
-    const double H0     = cosmo->get_H0();
-    const double OmegaR = cosmo->get_OmegaR(x);
+    double OmegaR;
     double dtau;
 
     for (int i = 0; i<index_tc; i++){
       x = x_array[i];
-      a = exp(x);
       Hp = cosmo->Hp_of_x(x);
+      OmegaR = cosmo->get_OmegaR(x);
       dtau = rec->dtaudx_of_x(x);
+
       delta_cdm[i + n_x*ik] = y_tc[i][Constants.ind_deltacdm_tc];
       v_cdm[i + n_x*ik]     = y_tc[i][Constants.ind_vcdm_tc];
       delta_b[i + n_x*ik]   = y_tc[i][Constants.ind_deltab_tc];
@@ -128,15 +129,16 @@ void Perturbations::integrate_perturbations(){
       Theta0[i + n_x*ik]    = y_tc[i][Constants.ind_start_theta_tc];
       Theta1[i + n_x*ik]    = y_tc[i][Constants.ind_start_theta_tc + 1];
       Theta2[i + n_x*ik]    = -20.*c*k/(45.*Hp*dtau)*Theta1[i + n_x*ik];
+      Theta3[i + n_x*ik]    = -3.*c*k/(7.*Hp*dtau)*Theta2[i + n_x*ik];
+      Theta4[i + n_x*ik]    = -4.*c*k/(9.*Hp*dtau)*Theta3[i + n_x*ik];
       Phi[i + n_x*ik]       = y_tc[i][Constants.ind_Phi_tc];
       Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
       Pi[i + n_x*ik]        = Theta2[i + n_x*ik]; //no polarization
     }
     for (int i = index_tc; i < n_x; i++){
       x = x_array[i];
-      a = exp(x);
-      Hp = cosmo->Hp_of_x(x);
-      dtau = rec->dtaudx_of_x(x);
+      OmegaR = cosmo->get_OmegaR(x);
+
       delta_cdm[i + n_x*ik] = y_full[i-index_tc][Constants.ind_deltacdm];
       v_cdm[i + n_x*ik]     = y_full[i-index_tc][Constants.ind_vcdm];
       delta_b[i + n_x*ik]   = y_full[i-index_tc][Constants.ind_deltab];
@@ -144,6 +146,8 @@ void Perturbations::integrate_perturbations(){
       Theta0[i + n_x*ik]    = y_full[i-index_tc][Constants.ind_start_theta];
       Theta1[i + n_x*ik]    = y_full[i-index_tc][Constants.ind_start_theta + 1];
       Theta2[i + n_x*ik]    = y_full[i-index_tc][Constants.ind_start_theta + 2];
+      Theta3[i + n_x*ik]    = y_full[i-index_tc][Constants.ind_start_theta + 3];
+      Theta4[i + n_x*ik]    = y_full[i-index_tc][Constants.ind_start_theta + 4];
       Phi[i + n_x*ik]       = y_full[i-index_tc][Constants.ind_Phi];
       Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
       Pi[i + n_x*ik]        = Theta2[i + n_x*ik]; //no polarization
@@ -156,10 +160,12 @@ void Perturbations::integrate_perturbations(){
   delta_b_spline.create(x_array, k_array, delta_b, "delta_b_spline");
   v_b_spline.create(x_array, k_array, v_b, "v_b_spline");
 
-  Theta_spline = std::vector<Spline2D>(2);
+  Theta_spline = std::vector<Spline2D>(5);
   Theta_spline[0].create(x_array, k_array, Theta0, "Theta0_spline");
   Theta_spline[1].create(x_array, k_array, Theta1, "Theta1_spline");
   Theta_spline[2].create(x_array, k_array, Theta2, "Theta2_spline");
+  Theta_spline[3].create(x_array, k_array, Theta3, "Theta3_spline");
+  Theta_spline[4].create(x_array, k_array, Theta4, "Theta4_spline");
 
   Phi_spline.create(x_array, k_array, Phi, "Phi_spline");
   Psi_spline.create(x_array, k_array, Psi, "Psi_spline");
@@ -368,7 +374,7 @@ double Perturbations::get_tight_coupling_time(const double k) const{
 void Perturbations::compute_source_functions(){
   Utils::StartTiming("source");
 
-  Vector k_array = Utils::linspace(k_min, k_max, n_k);
+  Vector k_array = Utils::linspace(k_min, k_max, n_x);
   Vector x_array = Utils::linspace(x_start, 0.0, n_x);
 
   // Make storage for the source functions (in 1D array to be able to pass it to the spline)
@@ -389,7 +395,6 @@ void Perturbations::compute_source_functions(){
 
       // Fetch all the things we need
       const double c         = Constants.c;
-
       const double Hp        = cosmo->Hp_of_x(x);
       const double dHp       = cosmo->dHpdx_of_x(x);
       const double ddHp      = cosmo->ddHpddx_of_x(x);
@@ -408,9 +413,9 @@ void Perturbations::compute_source_functions(){
 
       const double theta0    = get_Theta(x, k, 0);
       const double theta1    = get_Theta(x, k, 1);
-      const double pi        = get_Pi(x, k);
-      const double dpi       = Pi_spline.deriv_x(x, k);
-      const double ddpi      = Pi_spline.deriv_xx(x, k);
+      const double pi        = get_Pi(x, k); // = theta2
+      const double theta3    = get_Theta(x, k, 3);
+      const double theta4    = get_Theta(x, k, 4);
       const double psi       = get_Psi(x, k);
       const double dpsi      = Psi_spline.deriv_x(x, k);
       const double phi       = get_Phi(x, k);
@@ -420,15 +425,32 @@ void Perturbations::compute_source_functions(){
       const double vb        = get_v_b(x, k);
       const double dvb       = v_b_spline.deriv_x(x, k);
 
-      // Temperature source
-      double t1 = g_tilde*(theta0 + psi + pi/4.);
-      double t2 = exp(-tau)*(dpsi-dphi);
-      double t3 = 1./(c*k)*(dHp*g_tilde*vb + Hp*dg_tilde*vb + Hp*g_tilde*dvb);
-      double t4 = 3./(4.*c*c*k*k)*(g_tilde*pi*(dHp*dHp + Hp*ddHp)
-                                    + 3.*Hp*dHp*(dg_tilde*pi + g_tilde*dpi)
-                                    + Hp*Hp*(ddg_tilde*pi + 2.*dg_tilde*dpi + g_tilde*ddpi));
+      const double x_tc      = get_tight_coupling_time(k);
 
-      ST_array[index] = t1 + t2 - t3 + t4;
+      double dtheta1 = c*k/(3.*Hp)*theta0 -2.*c*k/(3.*Hp)*pi + c*k/(3.*Hp)*psi + dtau*(theta1 + vb/3.);
+      double dpi     = 2.*c*k/(5.*Hp)*theta1 - 3.*c*k/(5.*Hp)*theta3 + 9./10.*dtau*pi;
+      double dtheta3 = 3.*c*k/(7.*Hp)*pi - 4.*c*k/(7.*Hp)*theta4 + dtau*theta3;
+      double ddpi    = 2.*c*k/(5.*Hp)*(dtheta1 - dHp*theta1/Hp) - 3.*c*k/(5.*Hp)*(dtheta3 - dHp*theta3/Hp) + 9./10.*(ddtau*pi + dtau*dpi);
+
+      if (x < x_tc) {
+        double dtheta0 = -c*k*theta1/Hp - dphi;
+        double q       = (-((1.-R)*dtau + (1.+R)*ddtau)*(3.*theta1 + vb) - c*k*psi/Hp + (1.-dHp/Hp)*c*k/Hp*(-theta0 + 2.*pi) - c*k/Hp*dtheta0)/((1.+R)*dtau + dHp/Hp - 1.);
+        dtheta1        = (q - dvb)/3.;
+
+        dpi            = -20.*c*k/45.*(dtheta1/(Hp*dtau) - theta1/pow(Hp*dtau, 2.)*(Hp*ddtau + dHp*dtau));
+        dtheta3        = -3.*c*k/7.*(dpi/(Hp*dtau) - pi/pow(Hp*dtau, 2.)*(Hp*ddtau + dHp*dtau));
+        ddpi           = 2.*c*k/(5.*Hp)*(dtheta1 - dHp*theta1/Hp) - 3.*c*k/(5.*Hp)*(dtheta3 - dHp*theta3/Hp) + 9./10.*(ddtau*pi + dtau*dpi);
+      }
+
+      // Temperature source
+      double sw = g_tilde*(theta0 + psi + pi/4.);
+      double isw = exp(-tau)*(dpsi-dphi);
+      double doppler = 1./(c*k)*(dHp*g_tilde*vb + Hp*dg_tilde*vb + Hp*g_tilde*dvb);
+      double quadrupole = 3./pow(2.*c*k, 2.)*(g_tilde*pi*(dHp*dHp + Hp*ddHp)
+                                              + 3.*Hp*dHp*(dg_tilde*pi + g_tilde*dpi)
+                                              + Hp*Hp*(ddg_tilde*pi + 2.*dg_tilde*dpi + g_tilde*ddpi));
+
+      ST_array[index] = sw + isw - doppler + quadrupole;
     }
   }
 
@@ -740,7 +762,7 @@ void Perturbations::output(const double k, const std::string filename) const{
     fp << get_Pi(x,k)        << " ";
     fp << get_Source_T(x,k)  << " ";
     fp << get_Source_T(x,k) * Utils::j_ell(5,   arg)           << " ";
-    fp << get_Source_T(x,k) * Utils::j_ell(50,  arg)           << " ";
+    fp << get_Source_T(x,k) * Utils::j_ell(100,  arg)          << " ";
     fp << get_Source_T(x,k) * Utils::j_ell(500, arg)           << "\n";
   };
   std::for_each(x_array.begin(), x_array.end(), print_data);

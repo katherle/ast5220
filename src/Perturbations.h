@@ -41,6 +41,12 @@ class Perturbations{
     Spline2D Pi_spline{"Pi_spline"};
     Spline2D Psi_spline{"Psi_spline"};
 
+    Spline2D dPhi_spline{"dPhi_spline"};
+    Spline2D dPsi_spline{"dPsi_spline"};
+    Spline2D dPi_spline{"dPi_spline"};
+    Spline2D ddPi_spline{"ddPi_spline"};
+    Spline2D dv_b_spline{"dvb_spline"};
+
     // Splines of source functions (ST for temperature; SE for polarization)
     Spline2D ST_spline{"ST_spline"};
     Spline2D SE_spline{"SE_spline"};

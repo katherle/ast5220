@@ -7,22 +7,22 @@ const char *SPLINE_ERROR = "Error in spline routines\n";
 //====================================================
 
 Spline::Spline(
-    double *x, 
-    double *y, 
-    const int nx, 
-    std::string splinename, 
+    double *x,
+    double *y,
+    const int nx,
+    std::string splinename,
     const gsl_interp_type *interpoltype){
   create(x, y, nx, splinename, interpoltype);
 }
 
 Spline::Spline(
-    Vector &x, 
-    Vector &y, 
-    std::string splinename, 
+    Vector &x,
+    Vector &y,
+    std::string splinename,
     const gsl_interp_type *interpoltype){
   create(x, y, splinename, interpoltype);
 }
-    
+
 Spline::Spline(std::string name) : name(name) {}
 
 //====================================================
@@ -47,17 +47,17 @@ Spline::Spline(const Spline& rhs){
   else
     free();
 }
-    
+
 //====================================================
 // Create a GSL spline
 //====================================================
 void Spline::create(
-    double *x, 
-    double *y, 
-    const int nx, 
-    std::string splinename, 
+    double *x,
+    double *y,
+    const int nx,
+    std::string splinename,
     const gsl_interp_type *interpoltype){
- 
+
   // Clean up if we already have a spline allocated
   if(spline) free();
 
@@ -91,14 +91,14 @@ void Spline::create(
 }
 
 void Spline::create(
-    Vector &x, 
-    Vector &y, 
-    std::string splinename, 
+    Vector &x,
+    Vector &y,
+    std::string splinename,
     const gsl_interp_type *interpoltype){
   if(x.size() != y.size()){
     std::cout << "Error Spline::create [" << splinename << "]: x and y array must have the same number of elements\n";
     throw SPLINE_ERROR;
-  } 
+  }
   create(x.data(), y.data(), int(x.size()), splinename, interpoltype);
 }
 
@@ -174,7 +174,7 @@ void Spline::free(){
     xmin = xmax = 0.0;
     size_x = 0;
     dx_min = dx_max = 0.0;
-    
+
     // Free the spline
     gsl_spline_free(spline);
     spline = nullptr;
@@ -231,29 +231,29 @@ Spline::~Spline(){
 
 Spline2D::Spline2D(
     double *x,
-    double *y, 
-    double *z, 
-    const int nx, 
-    const int ny, 
-    std::string splinename, 
+    double *y,
+    double *z,
+    const int nx,
+    const int ny,
+    std::string splinename,
     const gsl_interp2d_type *interpoltype) {
   create(x, y, z, nx, ny, splinename, interpoltype);
 }
 
 Spline2D::Spline2D(
-    Vector &x, 
-    Vector &y, 
-    Vector &z, 
-    std::string splinename, 
+    Vector &x,
+    Vector &y,
+    Vector &z,
+    std::string splinename,
     const gsl_interp2d_type *interpoltype){
   create(x, y, z, splinename, interpoltype);
 }
 
 Spline2D::Spline2D(
-    Vector &x, 
-    Vector &y, 
-    Vector2D &z, 
-    std::string splinename, 
+    Vector &x,
+    Vector &y,
+    Vector2D &z,
+    std::string splinename,
     const gsl_interp2d_type *interpoltype){
   create(x, y, z, splinename, interpoltype);
 }
@@ -266,7 +266,7 @@ Spline2D::Spline2D(std::string name) : name(name) {}
 Spline2D& Spline2D::operator=(const Spline2D& rhs){
   // We just create the spline from scratch instead of copying all the data
   if(rhs.spline)
-    create(rhs.spline->xarr, rhs.spline->yarr, rhs.spline->zarr, 
+    create(rhs.spline->xarr, rhs.spline->yarr, rhs.spline->zarr,
         rhs.size_x, rhs.size_y,rhs.name, rhs.interpoltype_used);
   else
     free();
@@ -279,7 +279,7 @@ Spline2D& Spline2D::operator=(const Spline2D& rhs){
 Spline2D::Spline2D(const Spline2D& rhs){
   // We just create the spline from scratch instead of copying all the data
   if(rhs.spline)
-    create(rhs.spline->xarr, rhs.spline->yarr, rhs.spline->zarr, 
+    create(rhs.spline->xarr, rhs.spline->yarr, rhs.spline->zarr,
         rhs.size_x, rhs.size_y,rhs.name, rhs.interpoltype_used);
   else
     free();
@@ -294,14 +294,14 @@ double Spline2D::operator()(double x, double y) const{
 // Create a GSL 2D spline
 //====================================================
 void Spline2D::create(
-    double *x, 
-    double *y, 
-    double *z, 
-    const int nx, 
-    const int ny, 
-    std::string splinename, 
+    double *x,
+    double *y,
+    double *z,
+    const int nx,
+    const int ny,
+    std::string splinename,
     const gsl_interp2d_type *interpoltype){
-  
+
   // Clean up if we already have a spline
   if(spline) free();
 
@@ -344,12 +344,12 @@ void Spline2D::create(
 }
 
 void Spline2D::create(
-    Vector& x, 
-    Vector& y, 
-    Vector& z, 
-    std::string splinename, 
+    Vector& x,
+    Vector& y,
+    Vector& z,
+    std::string splinename,
     const gsl_interp2d_type *interpoltype){
-  if(x.size()*y.size() != z.size()){ 
+  if(x.size()*y.size() != z.size()){
     std::cout << "Error Spline2D: z array have wrong number of elements nx*ny != nz\n";
     throw SPLINE_ERROR;
   }
@@ -357,10 +357,10 @@ void Spline2D::create(
 }
 
 void Spline2D::create(
-    Vector& x, 
-    Vector& y, 
-    Vector2D& z, 
-    std::string splinename, 
+    Vector& x,
+    Vector& y,
+    Vector2D& z,
+    std::string splinename,
     const gsl_interp2d_type *interpoltype){
   int nz_x = z.size();
   int nz_y = nz_x == 0 ? 0 : z[0].size();
@@ -397,9 +397,9 @@ double Spline2D::eval(const double x, const double y) const{
   // If out of bounds show a warning and set x,y to boundary value
   out_of_bounds_check(x,y);
   double xx = x, yy = y;
-  if(x < xmin) xx = xmin; 
-  if(x > xmax) xx = xmax; 
-  if(y < ymin) yy = ymin; 
+  if(x < xmin) xx = xmin;
+  if(x > xmax) xx = xmax;
+  if(y < ymin) yy = ymin;
   if(y > ymax) yy = ymax;
 
 #ifdef _USEOPENMP
@@ -413,11 +413,11 @@ double Spline2D::eval(const double x, const double y) const{
 }
 
 double Spline2D::eval_deriv(
-    const double x, 
-    const double y, 
-    const int derivx, 
+    const double x,
+    const double y,
+    const int derivx,
     const int derivy) const{
-  // Map (dx,dy) => n = derivx + 3*derivy 
+  // Map (dx,dy) => n = derivx + 3*derivy
   // which gives 0 = f, 1 = f_x, 2 = f_xx, 3 = f_y, 4 = f_xy and (f_xyy), 6 = f_yy
   const int n = derivx + 3*derivy;
 
@@ -434,9 +434,9 @@ double Spline2D::eval_deriv(
   // If out of bounds show a warning and set x,y to boundary value
   out_of_bounds_check(x,y);
   double xx = x, yy = y;
-  if(x < xmin) xx = xmin; 
-  if(x > xmax) xx = xmax; 
-  if(y < ymin) yy = ymin; 
+  if(x < xmin) xx = xmin;
+  if(x > xmax) xx = xmax;
+  if(y < ymin) yy = ymin;
   if(y > ymax) yy = ymax;
 
 #ifdef _USEOPENMP
@@ -447,7 +447,7 @@ double Spline2D::eval_deriv(
   gsl_interp_accel *yacc_thread = yacc;
 #endif
 
-  return derivfunc[n](spline, xx, yy, xacc_thread, yacc_thread); 
+  return derivfunc[n](spline, xx, yy, xacc_thread, yacc_thread);
 }
 
 //====================================================
@@ -615,12 +615,12 @@ void test_Spline(){
   } catch(const char * error) {
     std::cout << "ErrorMessage = " << error;
   }
-  
+
   // Create a spline using new, do a lookup and delete it
   Spline *s = new Spline(x,y,"pointerspline");
   assert( fabs(s->eval(xmin) - test_function(xmin)) < epsilon );
   delete s;
-  
+
   // Try to create a spline with wrong size
   auto xnew = x;
   xnew.push_back(xmax+1.0);
@@ -668,7 +668,7 @@ void test_Spline2D(){
   const double ymax    = 2.0;
   const int    nx      = 100;
   const int    ny      = 100;
-  
+
   // Create test-data
   Vector x(nx), y(ny), z(nx*ny);
   for(int ix = 0; ix < nx; ix++)
@@ -678,7 +678,7 @@ void test_Spline2D(){
   for(int ix = 0; ix < nx; ix++)
     for(int iy = 0; iy < ny; iy++)
       z[ix + nx*iy] = test_function_2D(x[ix], y[iy]);
-  
+
   // Some random points to check it at (we dont check close to other end as the condition y''=0 is not satisfied there)
   std::vector<std::pair<double,double>> points(1000);
   for(auto &p : points){
@@ -711,7 +711,7 @@ void test_Spline2D(){
       double error_deriv_xx = fabs(zz_xx - test_function_2D_deriv_xx(xx, yy));
       double error_deriv_yy = fabs(zz_yy - test_function_2D_deriv_yy(xx, yy));
       double error_deriv_xy = fabs(zz_xy - test_function_2D_deriv_xy(xx, yy));
-      
+
       assert(error          < epsilon);
       assert(error_deriv_x  < epsilon);
       assert(error_deriv_y  < epsilon);
@@ -733,7 +733,7 @@ void test_Spline2D(){
   // Check copy constructor works properly
   Spline2D h(g);
   run_test(h);
-  
+
   // Evaluate out of bounds and check that we get the same as the end-points
   std::cout << "Test out of bounds:\n";
   assert( fabs(h(xmin    ,ymin-1.0) - h(xmin,ymin)) < epsilon );
@@ -751,7 +751,7 @@ void test_Spline2D(){
   } catch(const char * error) {
     std::cout << "ErrorMessage = " << error;
   }
-  
+
   // Create a spline using new, do a lookup and delete it
   Spline2D *s = new Spline2D(x,y,z,"pointerspline");
   assert( fabs(s->eval(xmin,ymin) - test_function_2D(xmin,ymin)) < epsilon );
@@ -766,7 +766,6 @@ void test_Spline2D(){
   } catch(const char * error) {
     std::cout << "ErrorMessage = " << error;
   }
-  
+
   std::cout << "End testing!\n";
 }
-
