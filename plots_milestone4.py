@@ -28,7 +28,7 @@ fig, ax = plt.subplots(2, 1, figsize = (5, 8))
 #custom_cycler = cycler("color", ['xkcd:turquoise', 'xkcd:light purple', 'xkcd:dark blue'])
 #ax.set_prop_cycle(custom_cycler)
 for axi in ax:
-    axi.plot(ST["x"], ST["ST_100"]/1e-3)
+    axi.plot(ST["x"], ST["ST_100"]/1e-3, lw = 1, color = "grey")
     axi.set_xlabel("x")
     axi.set_title("Source function")
     axi.grid()
@@ -36,8 +36,10 @@ for axi in ax:
 ax[0].set_xlim([-7.5, 0])
 ax[1].set_xlim([-1.5, 0])
 plt.tight_layout()
-#lt.show()
+plt.savefig("ST.pdf")
+plt.show()
 
+"""
 #plot the bessel function
 tmp = np.asarray(pd.read_csv("bessel_test.txt", sep = " ", header = None))
 columns = ["x", "j_50"]
@@ -49,6 +51,7 @@ ax.plot(Bessel["x"], Bessel["j_50"])
 plt.tight_layout()
 plt.grid()
 #plt.show()
+"""
 
 #plot the CMB power spectrum
 tmp     = np.asarray(pd.read_csv('cells.txt', sep = " ", header = None))
@@ -63,11 +66,8 @@ l      = Cell["ell"]
 C_ell  = Cell["C_ell"] #already normalized
 
 fig, ax = plt.subplots()
-#ax.plot(l, abs(C_ell)*l/100, label = r"$C_\ell\left(\frac{\ell}{100}\right)$")
-ax.plot(l, C_ell, label = r"$C_\ell$")
-#ax.set_ylim([-1000, 8000])
-ax.set_ylim([1e-3, 1e7])
-ax.set_yscale("log")
+ax.plot(l, C_ell, color = "grey", label = r"$C_\ell$")
+ax.set_ylim([-1000, 7000])
 ax.set_xscale("log")
 ax.set_xlabel(r"$\ell$")
 ax.set_ylabel(r"$\frac{\ell(\ell+1)C_\ell}{2\pi}$ ($\mu$K$^2$)")
@@ -75,7 +75,8 @@ ax.set_title("CMB power spectrum")
 ax.legend()
 ax.grid()
 plt.tight_layout()
-#plt.show()
+plt.savefig("CMB_spectrum.pdf")
+plt.show()
 
 # generate cmb map
 import healpy as hp
@@ -87,8 +88,10 @@ np.random.seed(583)
 alm = hp.synalm(Cl, lmax = lmax, new = True)
 high_nside = 1024
 cmb_map = hp.alm2map(alm, nside = high_nside, lmax = lmax)
-hp.mollview(cmb_map, min=-300*1e-6, max=300*1e-6, unit = "K", title = "CMB Temperature", bgcolor = "k")
-#plt.show()
+cmap = cm.RdYlBu
+hp.mollview(cmb_map, min=-300*1e-6, max=300*1e-6, cmap = cmap, unit = "K", title = "CMB Temperature")
+plt.savefig("CMB_map.png")
+plt.show()
 
 #matter power spectrum
 tmp       = np.asarray(pd.read_csv('matter.txt', sep = " ", header = None))
@@ -99,8 +102,9 @@ for key, unit in zip(Matter.keys(), unit_names):
     Matter[key].unit = unit
 
 #for convenience
-k     = Matter["k"]*3.08567758e22
-P_k   = Matter["P(k)"]/(3.08567758e22**3)
+Mpc = 3.08567758e22
+k     = Matter["k"]*Mpc
+P_k   = Matter["P(k)"]/(Mpc**3)
 theta_6  = Matter["theta6"]
 theta_30 = Matter["theta30"]
 theta_100 = Matter["theta100"]
@@ -110,17 +114,22 @@ theta_1000 = Matter["theta1000"]
 
 h    = 0.67
 H0   = h*10**5*u.m/u.s/u.Mpc
-k_eq = 0.05
+k_eq = 0.05*h
 
 fig, ax = plt.subplots()
-ax.plot(k/h, np.abs(P_k)*(h**3))
-ax.axvline(k_eq, ls = "--", color = "k")
+ax.plot(k/h, np.abs(P_k)*(h**3), color = "grey")
+ax.axvline(k_eq, ls = "--", lw = 1, color = "k")
+ax.set_xlabel(r"k/h [Mpc$^{-1}$]")
+ax.set_ylabel(r"$\frac{P(k)}{h^3}$ [Mpc$^3$]")
+ax.set_title("Matter power spectrum")
 ax.set_yscale("log")
 ax.set_xscale("log")
 ax.grid()
 plt.tight_layout()
-#plt.show()
+plt.savefig("matter_spectrum.pdf")
+plt.show()
 
+"""
 eta0 = (46.5729*u.Gyr*const.c).to("Mpc")
 
 fig, ax = plt.subplots()
@@ -161,3 +170,4 @@ ax.legend()
 plt.grid()
 plt.tight_layout()
 plt.show()
+"""

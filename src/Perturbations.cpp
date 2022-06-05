@@ -386,6 +386,7 @@ void Perturbations::compute_source_functions(){
   for(auto ix = 0; ix < x_array.size(); ix++){
     const double x = x_array[ix];
     const double a = exp(x);
+    #pragma omp parallel for schedule(dynamic, 1)
     for(auto ik = 0; ik < k_array.size(); ik++){
       const double k = k_array[ik];
 

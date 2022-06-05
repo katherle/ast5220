@@ -25,8 +25,8 @@ CC += -fsanitize=address
 # OPTIONS = -D_FIDUCIAL_VERBOSE_ODE_SOLVER_TRUE
 
 # Add OpenMP parallelization
-# OPTIONS += -D_USEOPEMP
-# CC += -fopenmp
+OPTIONS += -D_USEOPEMP
+CC +=  -Xpreprocessor -fopenmp
 
 #=======================================================
 
@@ -56,7 +56,7 @@ examples: Examples.o Utils.o Spline.o ODESolver.o
 	${CC} -o $@ $^ $C $(INC) $(LIBS)
 
 cmb: $(OBJS)
-	${CC} -o $@ $^ $C $(INC) $(LIBS)
+	${CC} -lomp -o $@ $^ $C $(INC) $(LIBS)
 
 %.o: %.cpp
 	${CC}  -c -o $@ $< $C $(INC)
