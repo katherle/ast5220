@@ -18,8 +18,8 @@ plt.rc('figure', figsize=(7, 7/1.25)) # Larger figure sizes
 plt.rc('font', size=14)
 
 tmp = np.asarray(pd.read_csv('perturbations_k0.1.txt', sep = " ", header = None))
-columns = ["x", "delta_cdm", "v_cdm", "delta_b", "v_b", "Theta0", "Theta1", "Phi", "Psi",
-            "Pi", "ST_0", "ST_5", "ST_100", "ST_500"]
+columns = ["x", "eta", "delta_cdm", "v_cdm", "delta_b", "v_b", "Theta0", "Theta1", "Theta2",
+            "Phi", "Psi", "Pi", "ST_0", "ST_5", "ST_100", "ST_500"]
 perturb_1 = QTable(tmp, names = columns)
 
 tmp = np.asarray(pd.read_csv('perturbations_k0.01.txt', sep = " ", header = None))
@@ -118,42 +118,44 @@ plt.tight_layout()
 plt.savefig("Theta1.pdf")
 plt.show()
 
-#plot phi
+fig, ax = plt.subplots()
+ax.set_prop_cycle(custom_cycler)
+ax.plot(perturb_1["x"], perturb_1["Theta2"], label = "k = 0.1/Mpc")
+ax.plot(perturb_01["x"], perturb_01["Theta2"], label = "k = 0.01/Mpc")
+ax.plot(perturb_001["x"], perturb_001["Theta2"], label = "k = 0.001/Mpc")
+ax.set_xlim([-15, 0])
+ax.set_xlabel("x")
+ax.set_ylabel(r"$\Theta_2$")
+ax.set_title("Third photon multipole moment")
+ax.grid()
+ax.legend()
+plt.tight_layout()
+#plt.savefig("Theta2.pdf")
+plt.show()
+
+#plot phi and psi
+Mpc = 3.08567758e22
+y = perturb_1["eta"]*0.1/Mpc/np.sqrt(3)
+
 fig, ax = plt.subplots()
 ax.set_prop_cycle(custom_cycler)
 ax.plot(perturb_1["x"], perturb_1["Phi"], label = "k = 0.1/Mpc")
 ax.plot(perturb_01["x"], perturb_01["Phi"], label = "k = 0.01/Mpc")
 ax.plot(perturb_001["x"], perturb_001["Phi"], label = "k = 0.001/Mpc")
-"""
-ax.plot(perturb_1["x"], perturb_1["Psi"], ls = "--")
-ax.plot(perturb_01["x"], perturb_01["Psi"], ls = "--")
-ax.plot(perturb_001["x"], perturb_001["Psi"], ls = "--")
-"""
+#ax.plot(perturb_1["x"], -2*np.cos(y)/y**2, color = "k", lw = 1)
+ax.plot(perturb_1["x"], 2/y**2, color = "grey", lw = 1, ls = "--", label = "Analytical")
+ax.plot(perturb_1["x"], np.abs(perturb_1["Psi"]), ls = "--")
+ax.plot(perturb_01["x"], np.abs(perturb_01["Psi"]), ls = "--")
+ax.plot(perturb_001["x"], np.abs(perturb_001["Psi"]), ls = "--")
 ax.axvline(xrm, ls = "--", lw = 1, color = "tab:blue", label = r"$x_{\rm rm}$")
 ax.axvline(x_acc, ls = "--", lw = 1, color = "tab:green", label = r"$x_{\rm acc}$")
 ax.set_xlim([-15, 0])
+ax.set_ylim([0, 0.7])
 ax.set_xlabel("x")
-ax.set_ylabel(r"$\Phi$")
+ax.set_ylabel(r"$\Phi$, $\Psi$")
 ax.set_title("Gravitational potentials")
 ax.grid()
 ax.legend()
 plt.tight_layout()
 plt.savefig("Phi.pdf")
 plt.show()
-
-#plot psi
-"""
-fig, ax = plt.subplots()
-ax.set_prop_cycle(custom_cycler)
-ax.plot(perturb_1["x"], perturb_1["Psi"], label = "k = 0.1/Mpc")
-ax.plot(perturb_01["x"], perturb_01["Psi"], label = "k = 0.01/Mpc")
-ax.plot(perturb_001["x"], perturb_001["Psi"], label = "k = 0.001/Mpc")
-ax.axvline(xrm, ls = "--", lw = 1, color = "tab:blue", label = r"$x_{\rm rm}$")
-ax.axvline(x_acc, ls = "--", lw = 1, color = "tab:green", label = r"$x_{\rm acc}$")
-ax.set_xlim([-18, 0])
-ax.set_title(r"$\Psi$")
-ax.grid()
-ax.legend()
-plt.savefig("Psi.pdf")
-plt.show()
-"""

@@ -25,20 +25,13 @@ PowerSpectrum::PowerSpectrum(
 void PowerSpectrum::solve(){
 
   generate_bessel_function_splines();
-  //=========================================================================
-  // TODO: Line of sight integration to get Theta_ell(k)
+
   // Implement line_of_sight_integration
-  //=========================================================================
-  //k_array here shouldn't be the same as the one for C_ell
-  //linear spacing
-  //make sure you have enough points for the bessel functions
+  // make sure you have enough points for the bessel functions
   Vector k_array = Utils::linspace(k_min, k_max, n_k);
   line_of_sight_integration(k_array);
 
-  //=========================================================================
-  // TODO: Integration to get Cell by solving dCell^f/dlogk = Delta(k) * f_ell(k)^2
-  // Implement solve_for_cell
-  //=========================================================================
+  // Integration to get Cell by solving dCell^f/dlogk = Delta(k) * f_ell(k)^2
   double eta_0 = cosmo->eta_of_x(0.);
   int nk = (k_max - k_min)*16*eta_0/M_PI;
   Vector log_k_array = Utils::linspace(log(k_min), log(k_max), nk);
@@ -223,12 +216,12 @@ double PowerSpectrum::primordial_power_spectrum(const double k) const{
 double PowerSpectrum::get_matter_power_spectrum(const double x, const double k) const{
   const double c      = Constants.c;
   const double Phi    = pert->get_Phi(x, k);
-  const double OmegaM = cosmo->get_OmegaM(x);
+  const double OmegaM = cosmo->get_OmegaM(0.);
   const double a      = exp(x);
   const double H0     = cosmo->get_H0();
 
   double DeltaM = pow(c*k/H0, 2.)*2.*a*Phi/(3.*OmegaM);
-  double pofk   = pow(abs(DeltaM), 2.)*primordial_power_spectrum(k)*2*pow(M_PI, 2.)/pow(k, 3.);
+  double pofk   = pow(abs(DeltaM), 2.)*primordial_power_spectrum(k)*2.*pow(M_PI, 2.)/pow(k, 3.);
 
   return pofk;
 }

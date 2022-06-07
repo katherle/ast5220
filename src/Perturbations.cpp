@@ -32,11 +32,7 @@ void Perturbations::solve(){
 void Perturbations::integrate_perturbations(){
   Utils::StartTiming("integrateperturbation");
 
-  Vector k_array = Utils::linspace(log(k_min), log(k_max), n_k);
-  //log spacing
-  for (int k = 0; k < n_k; k++){
-    k_array[k] = exp(k_array[k]);
-  }
+  Vector k_array = exp(Utils::linspace(log(k_min), log(k_max), n_k));
   Vector x_array = Utils::linspace(x_start, 0.0, n_x);
 
   //declare vectors to store data in later
@@ -68,11 +64,7 @@ void Perturbations::integrate_perturbations(){
     double x_end_tight = get_tight_coupling_time(k);
 
     //create x array that only goes to x_end_tight:
-    Vector x_dummy(n_x);
-    for(int i = 0; i<n_x; i++){
-      x_dummy[i] = abs(x_array[i] - x_end_tight);
-    }
-    auto it = std::min_element(x_dummy.begin(), x_dummy.end());
+    auto it = std::lower_bound(x.begin(), x.end(), x_end_tight);
     int index_tc = std::distance(x_dummy.begin(), it);
     Vector x_tc = {x_array.begin(), x_array.begin()+index_tc};
 
@@ -112,14 +104,16 @@ void Perturbations::integrate_perturbations(){
     const double c = Constants.c;
     const double H0 = cosmo->get_H0();
     double x;
+    double a;
     double Hp;
     double OmegaR;
     double dtau;
 
     for (int i = 0; i<index_tc; i++){
       x = x_array[i];
+      a = exp(x);
       Hp = cosmo->Hp_of_x(x);
-      OmegaR = cosmo->get_OmegaR(x);
+      OmegaR = cosmo->get_OmegaR(0.);
       dtau = rec->dtaudx_of_x(x);
 
       delta_cdm[i + n_x*ik] = y_tc[i][Constants.ind_deltacdm_tc];
@@ -132,12 +126,13 @@ void Perturbations::integrate_perturbations(){
       Theta3[i + n_x*ik]    = -3.*c*k/(7.*Hp*dtau)*Theta2[i + n_x*ik];
       Theta4[i + n_x*ik]    = -4.*c*k/(9.*Hp*dtau)*Theta3[i + n_x*ik];
       Phi[i + n_x*ik]       = y_tc[i][Constants.ind_Phi_tc];
-      Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
+      Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k*a), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
       Pi[i + n_x*ik]        = Theta2[i + n_x*ik]; //no polarization
     }
     for (int i = index_tc; i < n_x; i++){
       x = x_array[i];
-      OmegaR = cosmo->get_OmegaR(x);
+      a = exp(x);
+      OmegaR = cosmo->get_OmegaR(0.0);
 
       delta_cdm[i + n_x*ik] = y_full[i-index_tc][Constants.ind_deltacdm];
       v_cdm[i + n_x*ik]     = y_full[i-index_tc][Constants.ind_vcdm];
@@ -149,7 +144,7 @@ void Perturbations::integrate_perturbations(){
       Theta3[i + n_x*ik]    = y_full[i-index_tc][Constants.ind_start_theta + 3];
       Theta4[i + n_x*ik]    = y_full[i-index_tc][Constants.ind_start_theta + 4];
       Phi[i + n_x*ik]       = y_full[i-index_tc][Constants.ind_Phi];
-      Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
+      Psi[i + n_x*ik]       = -Phi[i + n_x*ik] - 12.*pow(H0/(c*k*a), 2.)*(OmegaR*Theta2[i + n_x*ik] + 0.);
       Pi[i + n_x*ik]        = Theta2[i + n_x*ik]; //no polarization
     }
   }
@@ -450,6 +445,10 @@ void Perturbations::compute_source_functions(){
       double quadrupole = 3./pow(2.*c*k, 2.)*(g_tilde*pi*(dHp*dHp + Hp*ddHp)
                                               + 3.*Hp*dHp*(dg_tilde*pi + g_tilde*dpi)
                                               + Hp*Hp*(ddg_tilde*pi + 2.*dg_tilde*dpi + g_tilde*ddpi));
+      // double sw = 0.;
+      // double isw = 0.;
+      // double doppler = 0.;
+      // double quadrupole = 0.;
 
       ST_array[index] = sw + isw - doppler + quadrupole;
     }
@@ -508,10 +507,10 @@ int Perturbations::rhs_tight_coupling_ode(double x, double k, const double *y, d
   const double dHp        = cosmo->dHpdx_of_x(x);
   const double H0         = cosmo->get_H0();
   const double a          = exp(x);
-  const double OmegaR     = cosmo->get_OmegaR();
-  const double OmegaNu    = cosmo->get_OmegaNu();
-  const double OmegaCDM   = cosmo->get_OmegaCDM();
-  const double OmegaB     = cosmo->get_OmegaB();
+  const double OmegaR     = cosmo->get_OmegaR(0.);
+  const double OmegaNu    = cosmo->get_OmegaNu(0.);
+  const double OmegaCDM   = cosmo->get_OmegaCDM(0.);
+  const double OmegaB     = cosmo->get_OmegaB(0.);
   const double dtau       = rec->dtaudx_of_x(x);
   const double ddtau      = rec->ddtauddx_of_x(x);
   const double R          = 4.*OmegaR/(3.*OmegaB*a);
@@ -752,12 +751,14 @@ void Perturbations::output(const double k, const std::string filename) const{
   auto print_data = [&] (const double x) {
     double arg = k * (cosmo->eta_of_x(0.0) - cosmo->eta_of_x(x));
     fp << x                  << " ";
+    fp << cosmo->eta_of_x(x) << " ";
     fp << get_delta_cdm(x,k) << " ";
     fp << get_v_cdm(x,k)     << " ";
     fp << get_delta_b(x,k)   << " ";
     fp << get_v_b(x, k)      << " ";
     fp << get_Theta(x,k,0)   << " ";
     fp << get_Theta(x,k,1)   << " ";
+    fp << get_Theta(x,k,2)   << " ";
     fp << get_Phi(x,k)       << " ";
     fp << get_Psi(x,k)       << " ";
     fp << get_Pi(x,k)        << " ";
